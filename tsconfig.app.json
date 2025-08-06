@@ -12,9 +12,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "vueCompilerOptions": {
-    "plugins": ["unplugin-vue-macros/volar"]
-  },
   "include": [
     "env.d.ts",
     "src/**/*",

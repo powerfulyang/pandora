@@ -40,5 +40,8 @@ export default defineConfig({
       //   warnOnly: true,
       // },
     },
+    hooks: {
+      afterAllFilesWrite: 'node patch-orval.mjs',
+    },
   },
 })

@@ -1,17 +1,17 @@
 import process from 'node:process'
+import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 import MotionResolver from 'motion-v/resolver'
 import UnoCSS from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
-import imagemin from 'unplugin-imagemin/vite'
 import Components from 'unplugin-vue-components/vite'
 import { VueRouterAutoImports } from 'unplugin-vue-router'
 import VueRouter from 'unplugin-vue-router/vite'
 import { defineConfig } from 'vite'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import AutoIconServerPlugin from './plugins/icon'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -22,6 +22,9 @@ export default defineConfig({
       external: [],
     },
     sourcemap: process.env.NODE_ENV !== 'production',
+  },
+  esbuild: {
+    // drop: ['console'],
   },
   //
   optimizeDeps: {
@@ -37,6 +40,10 @@ export default defineConfig({
     host: true,
   },
   plugins: [
+    legacy({
+      targets: ['defaults', 'not IE 11'],
+    }),
+    AutoIconServerPlugin(),
     codeInspectorPlugin({
       bundler: 'vite',
     }),
@@ -59,9 +66,7 @@ export default defineConfig({
       extensions: ['.vue'],
       exclude: ['**/components/**'],
     }),
-    vueDevTools(),
     UnoCSS(),
-    imagemin(),
     Components({
       dirs: [
         'src/components',
