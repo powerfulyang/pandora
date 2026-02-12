@@ -25,6 +25,10 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
   ],
+  worker: {
+    format: 'es',
+    plugins: () => [viteTsConfigPaths()],
+  },
   optimizeDeps: {
     exclude: [
       '@jsquash/avif',

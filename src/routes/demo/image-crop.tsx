@@ -74,9 +74,12 @@ function ImageCropTool() {
 
   useEffect(() => {
     // Relative path to workers is safer in Vite
-    const worker = new Worker(new URL('../../lib/image.worker.ts', import.meta.url), {
-      type: 'module',
-    })
+    const worker = new Worker(
+      new URL('@/lib/image.worker.ts', import.meta.url),
+      {
+        type: 'module',
+      },
+    )
     workerRef.current = worker
     apiRef.current = Comlink.wrap<ImageWorkerAPI>(worker)
 
@@ -89,7 +92,7 @@ function ImageCropTool() {
   const [cropHeight, setCropHeight] = useState<string>('')
   const [isCustom, setIsCustom] = useState(false)
   const [customAspectInput, setCustomAspectInput] = useState('1:1')
-  
+
   // Output Scaling state
   const [outputWidth, setOutputWidth] = useState<string>('')
   const [outputHeight, setOutputHeight] = useState<string>('')
@@ -108,13 +111,13 @@ function ImageCropTool() {
     if (completedCrop && imgRef.current) {
       const scaleX = imgRef.current.naturalWidth / imgRef.current.width
       const scaleY = imgRef.current.naturalHeight / imgRef.current.height
-      
+
       const nw = Math.round(completedCrop.width * scaleX)
       const nh = Math.round(completedCrop.height * scaleY)
-      
+
       setCropWidth(nw.toString())
       setCropHeight(nh.toString())
-      
+
       // Update output if still synced
       if (isUpdatingOutputFromCrop.current) {
         setOutputWidth(nw.toString())
@@ -134,7 +137,7 @@ function ImageCropTool() {
     if (!imgRef.current) return
     const scaleX = imgRef.current.naturalWidth / imgRef.current.width
     const scaleY = imgRef.current.naturalHeight / imgRef.current.height
-    
+
     // Clamp to natural size
     const clampedW = Math.min(w, imgRef.current.naturalWidth)
     const clampedH = Math.min(h, imgRef.current.naturalHeight)
@@ -149,7 +152,7 @@ function ImageCropTool() {
     }
     setCrop(newCrop)
     setCompletedCrop(newCrop)
-    
+
     // Update local string states if clamped
     setCropWidth(Math.round(clampedW).toString())
     setCropHeight(Math.round(clampedH).toString())
@@ -158,7 +161,7 @@ function ImageCropTool() {
       setOutputWidth(Math.round(clampedW).toString())
       setOutputHeight(Math.round(clampedH).toString())
     }
-    
+
     setTimeout(() => {
       isUpdatingFromInput.current = false
     }, 0)
@@ -166,14 +169,14 @@ function ImageCropTool() {
 
   const pushToHistory = (newCrop: PixelCrop | undefined) => {
     if (isInternalUpdate.current) return
-    
+
     setHistory((prev) => {
       const current = prev[historyIndex]
       // Skip if same as current
       if (
         (current === undefined && newCrop === undefined) ||
-        (current && newCrop && 
-          current.x === newCrop.x && current.y === newCrop.y && 
+        (current && newCrop &&
+          current.x === newCrop.x && current.y === newCrop.y &&
           current.width === newCrop.width && current.height === newCrop.height)
       ) {
         return prev
@@ -383,7 +386,7 @@ function ImageCropTool() {
 
     setIsProcessing(true)
     setShowSuccess(false)
-    
+
     try {
       // Step 1: Extract pixel data (must be main thread due to Canvas)
       const imageData = await getCroppedImageData(
@@ -406,7 +409,7 @@ function ImageCropTool() {
       )
 
       downloadBlob(blob, `pandora-image.${format}`)
-      
+
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (e) {
@@ -458,11 +461,10 @@ function ImageCropTool() {
                         <button
                           key={f}
                           onClick={() => setFormat(f)}
-                          className={`px-3 py-2 rounded-sm text-xs font-bold transition-all border ${
-                            format === f
-                              ? 'bg-accent-muted border-accent text-accent'
-                              : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
-                          }`}
+                          className={`px-3 py-2 rounded-sm text-xs font-bold transition-all border ${format === f
+                            ? 'bg-accent-muted border-accent text-accent'
+                            : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
+                            }`}
                         >
                           {f.toUpperCase()}
                         </button>
@@ -512,9 +514,9 @@ function ImageCropTool() {
                         onChange={(e) => onCropWidthChange(e.target.value)}
                         className="w-full bg-bg border border-border rounded-sm px-3 py-2.5 text-sm focus:border-secondary outline-none transition-all font-mono text-text"
                         placeholder="W"
-                      />  
+                      />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="text-xs text-text font-bold uppercase tracking-tight">
                         Height
@@ -533,34 +535,34 @@ function ImageCropTool() {
 
               {/* Output Size Scaling */}
               <section className="border-t border-border pt-6">
-                  <div className="flex items-center justify-between w-full group mb-4">
-                    <button
-                      onClick={() => setIsOutputExpanded(!isOutputExpanded)}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4 text-accent" />
-                      <h2 className="text-sm font-bold uppercase tracking-widest text-text-secondary group-hover:text-accent transition-colors">
-                        Output Size
-                      </h2>
-                      {isOutputExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-text-muted" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-text-muted" />
-                      )}
-                    </button>
-                    {isOutputExpanded && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          resetOutputSize()
-                        }}
-                        className="text-[10px] font-bold text-accent hover:text-accent-hover transition-colors flex items-center gap-1"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                        RESET
-                      </button>
+                <div className="flex items-center justify-between w-full group mb-4">
+                  <button
+                    onClick={() => setIsOutputExpanded(!isOutputExpanded)}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4 text-accent" />
+                    <h2 className="text-sm font-bold uppercase tracking-widest text-text-secondary group-hover:text-accent transition-colors">
+                      Output Size
+                    </h2>
+                    {isOutputExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-text-muted" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-text-muted" />
                     )}
-                  </div>
+                  </button>
+                  {isOutputExpanded && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        resetOutputSize()
+                      }}
+                      className="text-[10px] font-bold text-accent hover:text-accent-hover transition-colors flex items-center gap-1"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      RESET
+                    </button>
+                  )}
+                </div>
 
                 {isOutputExpanded && (
                   <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -627,13 +629,12 @@ function ImageCropTool() {
                           }
                         }
                       }}
-                      className={`px-2 py-2 rounded-sm text-xs font-bold transition-all border ${
-                        (opt.type === 'free' && aspect === undefined && !isCustom) ||
+                      className={`px-2 py-2 rounded-sm text-xs font-bold transition-all border ${(opt.type === 'free' && aspect === undefined && !isCustom) ||
                         (opt.type === 'custom' && isCustom) ||
                         (opt.type === 'preset-group' && aspect !== undefined && !isCustom)
-                          ? 'bg-success-muted border-success text-success'
-                          : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
-                      }`}
+                        ? 'bg-success-muted border-success text-success'
+                        : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
+                        }`}
                     >
                       {opt.label}
                     </button>
@@ -681,11 +682,10 @@ function ImageCropTool() {
                               setCrop(centerAspectCrop(width, height, opt.value))
                             }
                           }}
-                          className={`px-1 py-2 rounded-sm text-xs font-bold transition-all border ${
-                            aspect === opt.value
-                              ? 'bg-success-muted border-success text-success'
-                              : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
-                          }`}
+                          className={`px-1 py-2 rounded-sm text-xs font-bold transition-all border ${aspect === opt.value
+                            ? 'bg-success-muted border-success text-success'
+                            : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
+                            }`}
                         >
                           {opt.label}
                         </button>
@@ -700,11 +700,10 @@ function ImageCropTool() {
               <button
                 onClick={handleDownload}
                 disabled={!completedCrop || isProcessing}
-                className={`w-full py-5 rounded-sm flex items-center justify-center gap-3 font-black text-lg transition-all relative overflow-hidden ${
-                  !completedCrop || isProcessing
-                    ? 'bg-bg-muted text-text-disabled cursor-not-allowed'
-                    : 'bg-linear-to-r from-accent to-secondary hover:scale-[1.02] active:scale-[0.98] text-text-inverted'
-                }`}
+                className={`w-full py-5 rounded-sm flex items-center justify-center gap-3 font-black text-lg transition-all relative overflow-hidden ${!completedCrop || isProcessing
+                  ? 'bg-bg-muted text-text-disabled cursor-not-allowed'
+                  : 'bg-linear-to-r from-accent to-secondary hover:scale-[1.02] active:scale-[0.98] text-text-inverted'
+                  }`}
               >
                 {showSuccess ? (
                   <CheckCircle2 className="w-6 h-6 text-white animate-in zoom-in" />
@@ -772,7 +771,7 @@ function ImageCropTool() {
                           {Math.round(
                             (imgRef.current.width /
                               imgRef.current.naturalWidth) *
-                              100,
+                            100,
                           )}
                           %
                         </span>
@@ -785,11 +784,10 @@ function ImageCropTool() {
                         onClick={undo}
                         disabled={historyIndex === 0}
                         title="Undo (Ctrl+Z)"
-                        className={`p-2 border-r border-border transition-colors ${
-                          historyIndex === 0
-                            ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
-                            : 'text-text hover:bg-surface-hover'
-                        }`}
+                        className={`p-2 border-r border-border transition-colors ${historyIndex === 0
+                          ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
+                          : 'text-text hover:bg-surface-hover'
+                          }`}
                       >
                         <Undo2 className="w-4 h-4" />
                       </button>
@@ -797,11 +795,10 @@ function ImageCropTool() {
                         onClick={redo}
                         disabled={historyIndex >= history.length - 1}
                         title="Redo (Ctrl+Shift+Z)"
-                        className={`p-2 transition-colors ${
-                          historyIndex >= history.length - 1
-                            ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
-                            : 'text-text hover:bg-surface-hover'
-                        }`}
+                        className={`p-2 transition-colors ${historyIndex >= history.length - 1
+                          ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
+                          : 'text-text hover:bg-surface-hover'
+                          }`}
                       >
                         <Redo2 className="w-4 h-4" />
                       </button>
