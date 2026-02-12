@@ -1,118 +1,150 @@
-import { createFileRoute } from '@tanstack/react-router'
-import {
-  Zap,
-  Server,
-  Route as RouteIcon,
-  Shield,
-  Waves,
-  Sparkles,
-} from 'lucide-react'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { Image as ImageIcon, Sparkles } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export const Route = createFileRoute('/')({ component: App })
 
 function App() {
-  const features = [
+  const tools = [
     {
-      icon: <Zap className="w-12 h-12 text-cyan-400" />,
-      title: 'Powerful Server Functions',
+      icon: <ImageIcon className="w-6 h-6" />,
+      title: 'Image Crop',
+      tag: 'WASM',
       description:
-        'Write server-side code that seamlessly integrates with your client components. Type-safe, secure, and simple.',
+        'Professional grade image cropping with WebAssembly-powered WebP & AVIF export.',
+      href: '/demo/image-crop',
+      color: 'text-accent',
+      bg: 'bg-accent-subtle/50',
     },
-    {
-      icon: <Server className="w-12 h-12 text-cyan-400" />,
-      title: 'Flexible Server Side Rendering',
-      description:
-        'Full-document SSR, streaming, and progressive enhancement out of the box. Control exactly what renders where.',
-    },
-    {
-      icon: <RouteIcon className="w-12 h-12 text-cyan-400" />,
-      title: 'API Routes',
-      description:
-        'Build type-safe API endpoints alongside your application. No separate backend needed.',
-    },
-    {
-      icon: <Shield className="w-12 h-12 text-cyan-400" />,
-      title: 'Strongly Typed Everything',
-      description:
-        'End-to-end type safety from server to client. Catch errors before they reach production.',
-    },
-    {
-      icon: <Waves className="w-12 h-12 text-cyan-400" />,
-      title: 'Full Streaming Support',
-      description:
-        'Stream data from server to client progressively. Perfect for AI applications and real-time updates.',
-    },
-    {
-      icon: <Sparkles className="w-12 h-12 text-cyan-400" />,
-      title: 'Next Generation Ready',
-      description:
-        'Built from the ground up for modern web applications. Deploy anywhere JavaScript runs.',
-    },
+    // More tools can be added here in the future
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      <section className="relative py-20 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"></div>
-        <div className="relative max-w-5xl mx-auto">
-          <div className="flex items-center justify-center gap-6 mb-6">
-            <img
-              src="/tanstack-circle-logo.png"
-              alt="TanStack Logo"
-              className="w-24 h-24 md:w-32 md:h-32"
-            />
-            <h1 className="text-6xl md:text-7xl font-black text-white [letter-spacing:-0.08em]">
-              <span className="text-gray-300">TANSTACK</span>{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                START
-              </span>
-            </h1>
-          </div>
-          <p className="text-2xl md:text-3xl text-gray-300 mb-4 font-light">
-            The framework for next generation AI applications
-          </p>
-          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
-            Full-stack framework powered by TanStack Router for React and Solid.
-            Build modern applications with server functions, streaming, and type
-            safety.
-          </p>
-          <div className="flex flex-col items-center gap-4">
-            <a
-              href="https://tanstack.com/start"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-cyan-500/50"
-            >
-              Documentation
-            </a>
-            <p className="text-gray-400 text-sm mt-2">
-              Begin your TanStack Start journey by editing{' '}
-              <code className="px-2 py-1 bg-slate-700 rounded text-cyan-400">
-                /src/routes/index.tsx
-              </code>
+    <div className="min-h-screen bg-bg text-text font-sans selection:bg-selection relative selection:text-accent">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-accent-subtle/20 rounded-full blur-[140px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-secondary-subtle/20 rounded-full blur-[140px]" />
+        {/* Fine Grain Texture via CSS Pattern */}
+        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[radial-gradient(#888_1px,transparent_1px)] [background-size:24px_24px]" />
+      </div>
+
+      {/* Theme Toggle — integrated more subtly */}
+      <div className="fixed top-8 right-8 z-50">
+        <ThemeToggle />
+      </div>
+
+      <main className="relative max-w-7xl mx-auto px-6 pt-20 pb-20">
+        {/* Compact Tool-First Header */}
+        <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-border/50 border-b">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent shadow-accent/30 shadow-[0_0_20px]">
+                <Sparkles className="w-4 h-4 text-text-inverted" />
+              </div>
+              <h1 className="text-4xl font-black tracking-tighter uppercase font-display italic">
+                Pandora<span className="text-accent ml-1">Toolbox</span>
+              </h1>
+            </div>
+            <p className="max-w-md text-sm text-text-secondary font-medium leading-relaxed">
+              Privacy-centric, high-performance web utilities running entirely in
+              your browser. Local-first speed, zero uploads.
             </p>
           </div>
-        </div>
-      </section>
+          
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status</span>
+              <span className="text-xs font-bold text-text uppercase">All Systems Ready</span>
+            </div>
+            <div className="h-8 w-px bg-border" />
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Vibe</span>
+              <span className="text-xs font-bold text-text uppercase">Local-First WASM</span>
+            </div>
+          </div>
+        </header>
 
-      <section className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <div
+        {/* Tools Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/50 border border-border/50 backdrop-blur-sm shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+          {tools.map((tool, index) => (
+            <Link
               key={index}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10"
+              to={tool.href}
+              className="group relative bg-bg p-10 transition-all duration-500 hover:bg-surface-hover overflow-hidden"
             >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-white mb-3">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400 leading-relaxed">
-                {feature.description}
-              </p>
+              {/* Hover Glow */}
+              <div className="absolute -inset-px bg-linear-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              
+              <div className="relative flex flex-col h-full">
+                <div className="flex items-start justify-between mb-12">
+                  <div className={`p-4 rounded-none ${tool.bg} border border-border group-hover:border-accent/30 transition-colors duration-500`}>
+                    <div className={tool.color}>{tool.icon}</div>
+                  </div>
+                  <span className="text-[10px] font-black tracking-widest text-text-muted px-2 py-1 border border-border uppercase">
+                    {tool.tag}
+                  </span>
+                </div>
+
+                <div className="mt-auto">
+                  <h3 className="text-3xl font-black mb-4 tracking-tight uppercase italic group-hover:text-accent transition-colors duration-300">
+                    {tool.title}
+                  </h3>
+                  <p className="text-text-secondary leading-relaxed font-light text-sm group-hover:text-text transition-colors duration-500">
+                    {tool.description}
+                  </p>
+                </div>
+
+                {/* Arrow Decoration */}
+                <div className="mt-12 flex items-center justify-end">
+                  <div className="w-16 h-px bg-border group-hover:w-20 group-hover:bg-accent transition-all duration-500" />
+                  <svg
+                    className="w-4 h-4 ml-2 text-border group-hover:text-accent transition-colors duration-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+          ))}
+
+          {/* Empty Slots */}
+          {[1, 2].map((i) => (
+            <div
+              key={`empty-${i}`}
+              className="hidden md:flex bg-bg/50 p-10 items-center justify-center border-border/20"
+            >
+              <div className="text-[10px] font-black text-text-muted/30 uppercase tracking-[0.4em]">
+                Slot {i + 1} Empty
+              </div>
             </div>
           ))}
         </div>
-      </section>
+
+        {/* Minimal Footer */}
+        <footer className="mt-24 pt-12 border-t border-border flex flex-col md:flex-row items-center justify-between gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+          <div className="flex items-center gap-6">
+             <img src="/logo.svg" alt="Pandora" className="h-6 w-auto opacity-50" />
+             <div className="h-4 w-px bg-border" />
+             <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted">
+               Built for Performance
+             </span>
+          </div>
+          <img
+            src="/tanstack-word-logo-white.svg"
+            alt="TanStack"
+            className="h-4 dark:invert-0 invert"
+          />
+        </footer>
+      </main>
     </div>
   )
 }

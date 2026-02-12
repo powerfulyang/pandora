@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Globe,
   Home,
+  Image as ImageIcon,
   Menu,
   Network,
   SquareFunction,
@@ -209,6 +210,19 @@ export default function Header() {
           >
             <Network size={20} />
             <span className="font-medium">TanStack Query</span>
+          </Link>
+
+          <Link
+            to="/demo/image-crop"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+            activeProps={{
+              className:
+                'flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2',
+            }}
+          >
+            <ImageIcon size={20} />
+            <span className="font-medium">Image Crop</span>
           </Link>
 
           {/* Demo Links End */}

@@ -1,15 +1,243 @@
+/* ──────────────────────────────────────────────────────────────
+   Google Fonts: Inter (body), Outfit (display), JetBrains Mono (code)
+   Must be before @import "tailwindcss" per CSS spec.
+   ────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Outfit:wght@100..900&display=swap");
+
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────────────────────────
+   Custom dark variant: driven by .dark class on <html>
+   ────────────────────────────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ──────────────────────────────────────────────────────────────
+   Theme Variables (Tailwind 4 @theme)
+   These extend the default theme and generate utility classes.
+   ────────────────────────────────────────────────────────────── */
+@theme {
+  /* Font families — generates font-sans, font-display, font-mono */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "Fira Code",
+    monospace;
+
+  /* Semantic color tokens — mapped from CSS variables below */
+  --color-bg: var(--pd-bg);
+  --color-bg-subtle: var(--pd-bg-subtle);
+  --color-bg-muted: var(--pd-bg-muted);
+  --color-bg-elevated: var(--pd-bg-elevated);
+  --color-bg-inset: var(--pd-bg-inset);
+
+  --color-surface: var(--pd-surface);
+  --color-surface-hover: var(--pd-surface-hover);
+
+  --color-border: var(--pd-border);
+  --color-border-subtle: var(--pd-border-subtle);
+  --color-border-hover: var(--pd-border-hover);
+
+  --color-text: var(--pd-text);
+  --color-text-secondary: var(--pd-text-secondary);
+  --color-text-muted: var(--pd-text-muted);
+  --color-text-disabled: var(--pd-text-disabled);
+  --color-text-inverted: var(--pd-text-inverted);
+
+  --color-accent: var(--pd-accent);
+  --color-accent-hover: var(--pd-accent-hover);
+  --color-accent-muted: var(--pd-accent-muted);
+  --color-accent-subtle: var(--pd-accent-subtle);
+
+  --color-secondary: var(--pd-secondary);
+  --color-secondary-hover: var(--pd-secondary-hover);
+  --color-secondary-muted: var(--pd-secondary-muted);
+  --color-secondary-subtle: var(--pd-secondary-subtle);
+
+  --color-success: var(--pd-success);
+  --color-success-muted: var(--pd-success-muted);
+  --color-danger: var(--pd-danger);
+  --color-danger-muted: var(--pd-danger-muted);
+  --color-warning: var(--pd-warning);
+  --color-warning-muted: var(--pd-warning-muted);
+
+  --color-overlay: var(--pd-overlay);
+  --color-selection: var(--pd-selection);
+  --color-shadow: var(--pd-shadow);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Light Theme (default)
+   Clinical, high-precision workstation palette
+   ────────────────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds — Cooler, cleaner Zinc palette */
+  --pd-bg: #fafafa;
+  --pd-bg-subtle: #f4f4f5;
+  --pd-bg-muted: #e4e4e7;
+  --pd-bg-elevated: #ffffff;
+  --pd-bg-inset: #f1f1f4;
+
+  /* Surfaces (cards, panels) */
+  --pd-surface: rgba(255, 255, 255, 0.7);
+  --pd-surface-hover: rgba(244, 244, 245, 0.8);
+
+  /* Borders — Softened for a cleaner look */
+  --pd-border: #f1f1f4;
+  --pd-border-subtle: #f4f4f5;
+  --pd-border-hover: #e4e4e7;
+
+  /* Text — Absolute contrast for body */
+  --pd-text: #09090b;
+  --pd-text-secondary: #3f3f46;
+  --pd-text-muted: #71717a;
+  --pd-text-disabled: #a1a1aa;
+  --pd-text-inverted: #fafafa;
+
+  /* Accent — High-precision Cyan */
+  --pd-accent: #0891b2;
+  --pd-accent-hover: #0e7490;
+  --pd-accent-muted: rgba(8, 145, 178, 0.15);
+  --pd-accent-subtle: rgba(8, 145, 178, 0.05);
+
+  /* Secondary — Deep Tech Purple */
+  --pd-secondary: #7c3aed;
+  --pd-secondary-hover: #6d28d9;
+  --pd-secondary-muted: rgba(124, 58, 237, 0.15);
+  --pd-secondary-subtle: rgba(124, 58, 237, 0.05);
+
+  /* Status */
+  --pd-success: #059669;
+  --pd-success-muted: rgba(5, 150, 105, 0.1);
+  --pd-danger: #dc2626;
+  --pd-danger-muted: rgba(220, 38, 38, 0.1);
+  --pd-warning: #d97706;
+  --pd-warning-muted: rgba(217, 119, 6, 0.1);
+
+  /* Effects */
+  --pd-overlay: rgba(9, 9, 11, 0.4);
+  --pd-selection: rgba(8, 145, 178, 0.15);
+  --pd-shadow: rgba(0, 0, 0, 0.05);
+
+  color-scheme: light;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Dark Theme
+   Deep, immersive dark palette with vibrant accents
+   ────────────────────────────────────────────────────────────── */
+.dark {
+  /* Backgrounds */
+  --pd-bg: #09090b;
+  --pd-bg-subtle: #18181b;
+  --pd-bg-muted: #27272a;
+  --pd-bg-elevated: #1c1c1f;
+  --pd-bg-inset: #09090b;
+
+  /* Surfaces */
+  --pd-surface: rgba(24, 24, 27, 0.4);
+  --pd-surface-hover: rgba(39, 39, 42, 0.6);
+
+  /* Borders — Softened for dark mode */
+  --pd-border: rgba(63, 63, 70, 0.3);
+  --pd-border-subtle: rgba(39, 39, 42, 0.3);
+  --pd-border-hover: rgba(113, 113, 122, 0.5);
+
+  /* Text */
+  --pd-text: #ffffff;
+  --pd-text-secondary: #d4d4d8;
+  --pd-text-muted: #a1a1aa; 
+  --pd-text-disabled: #71717a;
+  --pd-text-inverted: #09090b;
+
+  /* Accent — Cyan (brighter for dark bg) */
+  --pd-accent: #22d3ee;
+  --pd-accent-hover: #06b6d4;
+  --pd-accent-muted: rgba(34, 211, 238, 0.2);
+  --pd-accent-subtle: rgba(34, 211, 238, 0.08);
+
+  /* Secondary — Purple */
+  --pd-secondary: #c084fc;
+  --pd-secondary-hover: #a855f7;
+  --pd-secondary-muted: rgba(192, 132, 252, 0.2);
+  --pd-secondary-subtle: rgba(192, 132, 252, 0.08);
+
+  /* Status */
+  --pd-success: #34d399;
+  --pd-success-muted: rgba(52, 211, 153, 0.15);
+  --pd-danger: #f87171;
+  --pd-danger-muted: rgba(248, 113, 113, 0.15);
+  --pd-warning: #fbbf24;
+  --pd-warning-muted: rgba(251, 191, 36, 0.15);
+
+  /* Effects */
+  --pd-overlay: rgba(0, 0, 0, 0.7);
+  --pd-selection: rgba(34, 211, 238, 0.3);
+  --pd-shadow: rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Base Styles
+   ────────────────────────────────────────────────────────────── */
 body {
-  @apply m-0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  @apply m-0 bg-bg text-text font-sans antialiased relative min-h-screen;
+}
+
+/* Fine Grain Texture Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.3;
+  background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+  mix-blend-mode: overlay;
+}
+
+.dark body::before {
+  opacity: 0.15;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   View Transition Styles
+   ────────────────────────────────────────────────────────────── */
+::view-transition-group(root),
+::view-transition-image-pair(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+  display: block;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  width: 100%;
+  height: 100%;
+}
+
+[data-transition-direction="expand"]::view-transition-old(root) {
+  z-index: 1;
+}
+[data-transition-direction="expand"]::view-transition-new(root) {
+  z-index: 999;
+}
+
+[data-transition-direction="shrink"]::view-transition-old(root) {
+  z-index: 999;
+}
+[data-transition-direction="shrink"]::view-transition-new(root) {
+  z-index: 1;
+}
+
+::selection {
+  background: var(--pd-selection);
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  @apply font-mono;
 }

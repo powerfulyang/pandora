@@ -25,6 +25,15 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
   ],
+  optimizeDeps: {
+    exclude: [
+      '@jsquash/avif',
+      '@jsquash/jpeg',
+      '@jsquash/png',
+      '@jsquash/webp',
+      '@jsquash/resize',
+    ],
+  },
 })
 
 export default config

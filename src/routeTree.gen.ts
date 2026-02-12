@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoOrpcTodoRouteImport } from './routes/demo/orpc-todo'
+import { Route as DemoImageCropRouteImport } from './routes/demo/image-crop'
 import { Route as DemoBetterAuthRouteImport } from './routes/demo/better-auth'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
@@ -38,6 +39,11 @@ const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
 const DemoOrpcTodoRoute = DemoOrpcTodoRouteImport.update({
   id: '/demo/orpc-todo',
   path: '/demo/orpc-todo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoImageCropRoute = DemoImageCropRouteImport.update({
+  id: '/demo/image-crop',
+  path: '/demo/image-crop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoBetterAuthRoute = DemoBetterAuthRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/$': typeof ApiSplatRoute
   '/demo/better-auth': typeof DemoBetterAuthRoute
+  '/demo/image-crop': typeof DemoImageCropRoute
   '/demo/orpc-todo': typeof DemoOrpcTodoRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/$': typeof ApiSplatRoute
   '/demo/better-auth': typeof DemoBetterAuthRoute
+  '/demo/image-crop': typeof DemoImageCropRoute
   '/demo/orpc-todo': typeof DemoOrpcTodoRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/api/$': typeof ApiSplatRoute
   '/demo/better-auth': typeof DemoBetterAuthRoute
+  '/demo/image-crop': typeof DemoImageCropRoute
   '/demo/orpc-todo': typeof DemoOrpcTodoRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/$'
     | '/demo/better-auth'
+    | '/demo/image-crop'
     | '/demo/orpc-todo'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/$'
     | '/demo/better-auth'
+    | '/demo/image-crop'
     | '/demo/orpc-todo'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api/$'
     | '/demo/better-auth'
+    | '/demo/image-crop'
     | '/demo/orpc-todo'
     | '/demo/tanstack-query'
     | '/api/auth/$'
@@ -211,6 +223,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiSplatRoute: typeof ApiSplatRoute
   DemoBetterAuthRoute: typeof DemoBetterAuthRoute
+  DemoImageCropRoute: typeof DemoImageCropRoute
   DemoOrpcTodoRoute: typeof DemoOrpcTodoRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/demo/orpc-todo'
       fullPath: '/demo/orpc-todo'
       preLoaderRoute: typeof DemoOrpcTodoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/image-crop': {
+      id: '/demo/image-crop'
+      path: '/demo/image-crop'
+      fullPath: '/demo/image-crop'
+      preLoaderRoute: typeof DemoImageCropRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/better-auth': {
@@ -339,6 +359,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiSplatRoute: ApiSplatRoute,
   DemoBetterAuthRoute: DemoBetterAuthRoute,
+  DemoImageCropRoute: DemoImageCropRoute,
   DemoOrpcTodoRoute: DemoOrpcTodoRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
