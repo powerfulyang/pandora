@@ -1,0 +1,19 @@
+{
+  "projectName": "pandora",
+  "mode": "file-router",
+  "typescript": true,
+  "packageManager": "pnpm",
+  "tailwind": true,
+  "addOnOptions": {},
+  "git": true,
+  "version": 1,
+  "framework": "react-cra",
+  "chosenAddOns": [
+    "eslint",
+    "cloudflare",
+    "start",
+    "oRPC",
+    "better-auth",
+    "tanstack-query"
+  ]
+}
