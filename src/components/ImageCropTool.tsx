@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Settings2,
   Undo2,
+  ArrowLeft,
   Upload,
 } from 'lucide-react'
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop'
@@ -345,6 +346,8 @@ export default function ImageCropTool() {
     if (e.target.files && e.target.files.length > 0) {
       handleFile(e.target.files[0])
     }
+    // Reset value to allow selecting same file again
+    e.target.value = ''
   }
 
   const handleFile = (file: File) => {
@@ -483,7 +486,7 @@ export default function ImageCropTool() {
               to="/"
               className="text-[10px] font-bold uppercase tracking-widest text-text-muted hover:text-text transition-colors flex items-center gap-2 group"
             >
-              <Undo2 className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
               Return
             </Link>
           </div>
@@ -493,6 +496,15 @@ export default function ImageCropTool() {
           {/* Sidebar Settings */}
           <div className="lg:col-span-3 border-r border-border bg-bg-subtle/30 flex flex-col overflow-y-auto min-h-0">
             <div className="p-6 space-y-8">
+              {/* Tool Header */}
+              <div className="space-y-2">
+                <h2 className="font-display font-bold text-2xl uppercase tracking-tight text-text">Workspace</h2>
+                <p className="text-xs text-text-secondary font-mono leading-relaxed">
+                  Professional-grade cryptographic-safe image processing workstation.
+                  All operations are executed within your browser's secure sandbox.
+                </p>
+              </div>
+
               {/* Export Settings */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -671,13 +683,18 @@ export default function ImageCropTool() {
                           if (opt.type === 'free') {
                             setAspect(undefined)
                             setIsCustom(false)
+                            setPresetGroup('common')
+                            isUpdatingOutputFromCrop.current = true
                           } else if (opt.type === 'custom') {
                             setIsCustom(true)
+                            setPresetGroup('common')
+                            isUpdatingOutputFromCrop.current = true
                             parseCustomAspect(customAspectInput)
                           } else if (opt.type === 'common-group') {
                             setPresetGroup('common')
                             setAspect(1)
                             setIsCustom(false)
+                            isUpdatingOutputFromCrop.current = true
                             if (imgRef.current) {
                               setCrop(
                                 centerAspectCrop(
@@ -703,6 +720,7 @@ export default function ImageCropTool() {
                             !isCustom &&
                             presetGroup === 'common') ||
                           (opt.type === 'store-group' &&
+                            aspect !== undefined &&
                             !isCustom &&
                             presetGroup === 'store')
                           ? 'bg-text-secondary text-bg-elevated shadow-sm'
@@ -767,7 +785,7 @@ export default function ImageCropTool() {
                       </>
                     )}
 
-                    {!isCustom && presetGroup === 'store' && (
+                    {!isCustom && aspect !== undefined && presetGroup === 'store' && (
                       <>
                         {[
                           { label: 'CWS Icon', w: 128, h: 128 },

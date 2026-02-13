@@ -13,6 +13,28 @@ export interface ProcessOptions {
   height?: number
 }
 
+export async function decodeImage(blob: Blob): Promise<ImageData> {
+  const bitmap = await createImageBitmap(blob)
+  const { width, height } = bitmap
+
+  let canvas: OffscreenCanvas | HTMLCanvasElement
+  if (typeof OffscreenCanvas !== 'undefined') {
+    canvas = new OffscreenCanvas(width, height)
+  } else {
+    canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+  }
+
+  const ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D
+  if (!ctx) throw new Error('Could not get canvas context')
+
+  ctx.drawImage(bitmap, 0, 0)
+  bitmap.close()
+
+  return ctx.getImageData(0, 0, width, height)
+}
+
 /**
  * Extracts image data from a specific crop area of an image element.
  */

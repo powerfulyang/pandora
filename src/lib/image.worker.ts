@@ -31,6 +31,15 @@ const api = {
   ) => {
     return processAndEncodeImage(imageData, options)
   },
+  processFile: async (blob: Blob, options: ProcessOptions) => {
+    // Dynamically import to avoid circular dependency issues if any,
+    // though here dependencies are statically imported at top.
+    // We need to re-import decodeImage essentially or move it to a shared place?
+    // It is exported from image-processor.ts which is imported above.
+    const { decodeImage } = await import('./image-processor')
+    const imageData = await decodeImage(blob)
+    return processAndEncodeImage(imageData, options)
+  },
 }
 
 Comlink.expose(api)

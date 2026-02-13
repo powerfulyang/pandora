@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodoRouteImport } from './routes/todo'
 import { Route as ImageCropRouteImport } from './routes/image-crop'
+import { Route as ImageConverterRouteImport } from './routes/image-converter'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api.rpc.$'
@@ -24,6 +25,11 @@ const TodoRoute = TodoRouteImport.update({
 const ImageCropRoute = ImageCropRouteImport.update({
   id: '/image-crop',
   path: '/image-crop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImageConverterRoute = ImageConverterRouteImport.update({
+  id: '/image-converter',
+  path: '/image-converter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +55,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/image-converter': typeof ImageConverterRoute
   '/image-crop': typeof ImageCropRoute
   '/todo': typeof TodoRoute
   '/api/$': typeof ApiSplatRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/image-converter': typeof ImageConverterRoute
   '/image-crop': typeof ImageCropRoute
   '/todo': typeof TodoRoute
   '/api/$': typeof ApiSplatRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/image-converter': typeof ImageConverterRoute
   '/image-crop': typeof ImageCropRoute
   '/todo': typeof TodoRoute
   '/api/$': typeof ApiSplatRoute
@@ -76,16 +85,25 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/image-converter'
     | '/image-crop'
     | '/todo'
     | '/api/$'
     | '/api/auth/$'
     | '/api/rpc/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/image-crop' | '/todo' | '/api/$' | '/api/auth/$' | '/api/rpc/$'
+  to:
+    | '/'
+    | '/image-converter'
+    | '/image-crop'
+    | '/todo'
+    | '/api/$'
+    | '/api/auth/$'
+    | '/api/rpc/$'
   id:
     | '__root__'
     | '/'
+    | '/image-converter'
     | '/image-crop'
     | '/todo'
     | '/api/$'
@@ -95,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ImageConverterRoute: typeof ImageConverterRoute
   ImageCropRoute: typeof ImageCropRoute
   TodoRoute: typeof TodoRoute
   ApiSplatRoute: typeof ApiSplatRoute
@@ -116,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/image-crop'
       fullPath: '/image-crop'
       preLoaderRoute: typeof ImageCropRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/image-converter': {
+      id: '/image-converter'
+      path: '/image-converter'
+      fullPath: '/image-converter'
+      preLoaderRoute: typeof ImageConverterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -151,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ImageConverterRoute: ImageConverterRoute,
   ImageCropRoute: ImageCropRoute,
   TodoRoute: TodoRoute,
   ApiSplatRoute: ApiSplatRoute,

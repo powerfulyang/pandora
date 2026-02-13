@@ -49,9 +49,9 @@ const config = defineConfig({
       },
     },
   },
-  // optimizeDeps: {
-  //   exclude: Object.keys(jsquashExternals),
-  // },
+  optimizeDeps: {
+    exclude: Object.keys(jsquashExternals),
+  },
   // build: {
   //   rollupOptions: {
   //     external: Object.keys(jsquashExternals),
@@ -59,9 +59,6 @@ const config = defineConfig({
   //       paths: jsquashExternals,
   //     },
   //   },
-  // },
-  // ssr: {
-  //   external: Object.keys(jsquashExternals),
   // },
 })
 

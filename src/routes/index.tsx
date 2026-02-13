@@ -65,12 +65,12 @@ function Home() {
     },
     {
       id: 'compress',
-      title: 'Compressor',
+      title: 'Image Converter',
       icon: <Box strokeWidth={1.5} />,
-      desc: 'Lossless compression engine.',
-      href: '#',
-      status: 'OFFLINE',
-      stats: ['Module Missing'],
+      desc: 'Batch process, convert format, and compress images.',
+      href: '/image-converter',
+      status: 'ONLINE',
+      stats: ['Batch Mode', 'History Log'],
     },
   ]
 
@@ -151,6 +151,12 @@ function Home() {
                   className="px-6 py-3 bg-text text-bg font-bold text-sm tracking-wide hover:bg-accent hover:text-white transition-colors uppercase"
                 >
                   Launch Image Processor
+                </Link>
+                <Link
+                  to="/image-converter"
+                  className="px-6 py-3 border border-text text-text font-bold text-sm tracking-wide hover:bg-accent hover:text-white hover:border-accent transition-colors uppercase"
+                >
+                  Image Converter
                 </Link>
               </div>
             </div>

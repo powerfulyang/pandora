@@ -223,7 +223,27 @@ body::before {
    ────────────────────────────────────────────────────────────── */
 @utility bg-bg-angled {
   background-color: var(--pd-bg-subtle);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Crect width='10' height='10' fill='rgba(128,128,128,0.08)' /%3E%3Crect x='10' y='10' width='10' height='10' fill='rgba(128,128,128,0.08)' /%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Crect width='10' height='10' fill='rgba(128,128,128,0.05)' /%3E%3Crect x='10' y='10' width='10' height='10' fill='rgba(128,128,128,0.05)' /%3E%3C/svg%3E");
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--pd-border);
+    border-radius: 0px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--pd-accent);
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────
