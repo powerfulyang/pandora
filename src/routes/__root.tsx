@@ -37,7 +37,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Pandora Toolbox',
+        title: 'Pandora Toolbox - Local-First Web Utilities',
+      },
+      {
+        name: 'description',
+        content:
+          'Pandora Toolbox: 隐私至上、本地优先的现代 Web 工具箱。提供图片处理、任务管理等高效工具。',
       },
     ],
     links: [

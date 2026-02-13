@@ -69,52 +69,68 @@
    Clinical, high-precision workstation palette
    ────────────────────────────────────────────────────────────── */
 :root {
-  /* Backgrounds — Cooler, cleaner Zinc palette */
-  --pd-bg: #fafafa;
+  /* Backgrounds — Reverted to clean Zinc (Neutral) */
+  --pd-bg: #ffffff;
+  /* Pure White for maximum contrast */
   --pd-bg-subtle: #f4f4f5;
+  /* Zinc 100 */
   --pd-bg-muted: #e4e4e7;
+  /* Zinc 200 */
   --pd-bg-elevated: #ffffff;
-  --pd-bg-inset: #f1f1f4;
+  --pd-bg-inset: #fafafa;
+  /* Zinc 50 */
 
-  /* Surfaces (cards, panels) */
-  --pd-surface: rgba(255, 255, 255, 0.7);
-  --pd-surface-hover: rgba(244, 244, 245, 0.8);
+  /* Surfaces */
+  --pd-surface: rgba(255, 255, 255, 0.95);
+  --pd-surface-hover: #f4f4f5;
 
-  /* Borders — Softened for a cleaner look */
-  --pd-border: #f1f1f4;
+  /* Borders — Clear definition */
+  --pd-border: #e4e4e7;
+  /* Zinc 200 */
   --pd-border-subtle: #f4f4f5;
-  --pd-border-hover: #e4e4e7;
+  /* Zinc 100 */
+  --pd-border-hover: #d4d4d8;
+  /* Zinc 300 */
 
-  /* Text — Absolute contrast for body */
-  --pd-text: #09090b;
-  --pd-text-secondary: #3f3f46;
-  --pd-text-muted: #71717a;
+  /* Text — MAXIMUM CONTRAST as requested */
+  --pd-text: #000000;
+  /* Pure Black */
+  --pd-text-secondary: #27272a;
+  /* Zinc 800 - Very dark grey */
+  --pd-text-muted: #52525b;
+  /* Zinc 600 - Readable mid-grey */
   --pd-text-disabled: #a1a1aa;
-  --pd-text-inverted: #fafafa;
+  /* Zinc 400 */
+  --pd-text-inverted: #ffffff;
 
-  /* Accent — High-precision Cyan */
-  --pd-accent: #0891b2;
-  --pd-accent-hover: #0e7490;
-  --pd-accent-muted: rgba(8, 145, 178, 0.15);
-  --pd-accent-subtle: rgba(8, 145, 178, 0.05);
+  /* Accent — Darker for visibility on white */
+  --pd-accent: #0e7490;
+  /* Cyan 700 */
+  --pd-accent-hover: #155e75;
+  /* Cyan 800 */
+  --pd-accent-muted: rgba(14, 116, 144, 0.1);
+  --pd-accent-subtle: rgba(14, 116, 144, 0.05);
 
-  /* Secondary — Deep Tech Purple */
+  /* Secondary — Deep Purple */
   --pd-secondary: #7c3aed;
   --pd-secondary-hover: #6d28d9;
   --pd-secondary-muted: rgba(124, 58, 237, 0.15);
   --pd-secondary-subtle: rgba(124, 58, 237, 0.05);
 
   /* Status */
-  --pd-success: #059669;
-  --pd-success-muted: rgba(5, 150, 105, 0.1);
-  --pd-danger: #dc2626;
-  --pd-danger-muted: rgba(220, 38, 38, 0.1);
-  --pd-warning: #d97706;
-  --pd-warning-muted: rgba(217, 119, 6, 0.1);
+  --pd-success: #166534;
+  /* Green 700 - Darker */
+  --pd-success-muted: rgba(22, 101, 52, 0.1);
+  --pd-danger: #b91c1c;
+  /* Red 700 - Darker */
+  --pd-danger-muted: rgba(185, 28, 28, 0.1);
+  --pd-warning: #b45309;
+  /* Amber 700 - Darker */
+  --pd-warning-muted: rgba(180, 83, 9, 0.1);
 
   /* Effects */
-  --pd-overlay: rgba(9, 9, 11, 0.4);
-  --pd-selection: rgba(8, 145, 178, 0.15);
+  --pd-overlay: rgba(0, 0, 0, 0.4);
+  --pd-selection: rgba(14, 116, 144, 0.15);
   --pd-shadow: rgba(0, 0, 0, 0.05);
 
   color-scheme: light;
@@ -207,27 +223,7 @@ body::before {
    ────────────────────────────────────────────────────────────── */
 @utility bg-bg-angled {
   background-color: var(--pd-bg-subtle);
-  background-image:
-    linear-gradient(
-      45deg,
-      var(--pd-border-subtle) 25%,
-      transparent 25%,
-      transparent 75%,
-      var(--pd-border-subtle) 75%,
-      var(--pd-border-subtle)
-    ),
-    linear-gradient(
-      45deg,
-      var(--pd-border-subtle) 25%,
-      transparent 25%,
-      transparent 75%,
-      var(--pd-border-subtle) 75%,
-      var(--pd-border-subtle)
-    );
-  background-size: 20px 20px;
-  background-position:
-    0 0,
-    10px 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Crect width='10' height='10' fill='rgba(128,128,128,0.08)' /%3E%3Crect x='10' y='10' width='10' height='10' fill='rgba(128,128,128,0.08)' /%3E%3C/svg%3E");
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -251,6 +247,7 @@ body::before {
 [data-transition-direction='expand']::view-transition-old(root) {
   z-index: 1;
 }
+
 [data-transition-direction='expand']::view-transition-new(root) {
   z-index: 999;
 }
@@ -258,6 +255,7 @@ body::before {
 [data-transition-direction='shrink']::view-transition-old(root) {
   z-index: 999;
 }
+
 [data-transition-direction='shrink']::view-transition-new(root) {
   z-index: 1;
 }

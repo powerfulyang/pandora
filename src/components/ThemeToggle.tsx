@@ -19,7 +19,7 @@ export default function ThemeToggle() {
   if (!mounted) {
     return (
       <button
-        className="p-2 rounded-sm border border-border text-text-secondary opacity-50 cursor-wait"
+        className="p-2 text-text-secondary opacity-50 cursor-wait"
         aria-hidden="true"
       >
         <div className="w-4 h-4" />
@@ -33,7 +33,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-sm border border-border text-text-secondary hover:text-accent hover:border-accent/40 transition-all duration-300 bg-transparent active:scale-95 group"
+      className="p-2 text-text-secondary hover:text-accent hover:border-accent/40 transition-all duration-300 bg-transparent active:scale-95 group"
       title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
     >
       <Icon className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />

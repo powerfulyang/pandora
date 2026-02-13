@@ -5,7 +5,6 @@ import { Link } from '@tanstack/react-router'
 import * as Comlink from 'comlink'
 import {
   CheckCircle2,
-  ChevronDown,
   ChevronRight,
   Crop as CropIcon,
   Download,
@@ -22,8 +21,8 @@ import 'react-image-crop/dist/ReactCrop.css'
 import type { ImageWorkerAPI } from '@/lib/image.worker'
 
 import type { ImageFormat } from '@/lib/image-processor'
-import { downloadBlob, getCroppedImageData } from '@/lib/image-processor'
 import ThemeToggle from '@/components/ThemeToggle'
+import { saveAs } from 'file-saver'
 
 function centerAspectCrop(
   mediaWidth: number,
@@ -84,7 +83,22 @@ export default function ImageCropTool() {
   const [cropWidth, setCropWidth] = useState<string>('')
   const [cropHeight, setCropHeight] = useState<string>('')
   const [isCustom, setIsCustom] = useState(false)
+  const [presetGroup, setPresetGroup] = useState<'common' | 'store'>('common')
   const [customAspectInput, setCustomAspectInput] = useState('1:1')
+
+  const applySizePreset = (w: number, h: number) => {
+    const ratio = w / h
+    setAspect(ratio)
+    setOutputWidth(w.toString())
+    setOutputHeight(h.toString())
+    setIsOutputExpanded(true)
+    isUpdatingOutputFromCrop.current = false
+
+    if (imgRef.current) {
+      const { width, height } = imgRef.current
+      setCrop(centerAspectCrop(width, height, ratio))
+    }
+  }
 
   // Output Scaling state
   const [outputWidth, setOutputWidth] = useState<string>('')
@@ -386,13 +400,20 @@ export default function ImageCropTool() {
     setShowSuccess(false)
 
     try {
-      // Step 1: Extract pixel data (must be main thread due to Canvas)
-      const imageData = getCroppedImageData(
-        imgRef.current,
+      // Step 1: Create ImageBitmap (transferable) and prepare scaling
+      const bitmap = await createImageBitmap(imgRef.current)
+      const scaleX = imgRef.current.naturalWidth / imgRef.current.width
+      const scaleY = imgRef.current.naturalHeight / imgRef.current.height
+
+      // Step 2: Extract pixel data in Worker
+      const imageData = await apiRef.current.getCroppedImageData(
+        Comlink.transfer(bitmap, [bitmap]),
         completedCrop.x,
         completedCrop.y,
         completedCrop.width,
         completedCrop.height,
+        scaleX,
+        scaleY,
       )
 
       // Step 2: Offload encoding/resizing to Worker
@@ -406,7 +427,7 @@ export default function ImageCropTool() {
         },
       )
 
-      downloadBlob(blob, `pandora-image.${format}`)
+      saveAs(blob, `pandora-image.${format}`)
 
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
@@ -419,164 +440,168 @@ export default function ImageCropTool() {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-text p-6 md:p-12 font-sans relative overflow-x-hidden">
+    <div className="h-screen bg-bg text-text font-sans relative flex flex-col overflow-hidden">
       {/* Theme Toggle */}
       <div className="fixed top-5 right-5 z-50">
         <ThemeToggle />
       </div>
 
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-border/50 border-b">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-accent ring-1 ring-accent/30 shadow-[0_0_20px_rgba(34,211,238,0.2)]">
-                <img
-                  src="/logo.svg"
-                  className="w-5 h-5 dark:invert-0 invert"
-                  alt=""
-                />
-              </div>
-              <h1 className="text-4xl font-black tracking-tighter uppercase font-display italic">
-                Pandora<span className="text-accent ml-1">Crop</span>
-              </h1>
+      <div className="w-full max-w-[1400px] mx-auto border-x border-border h-screen bg-bg shadow-2xl shadow-black/20 flex flex-col">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-8 py-8 border-b border-border bg-surface/30 backdrop-blur-sm sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 flex items-center justify-center bg-accent text-bg-elevated rounded-sm shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+              <CropIcon className="w-5 h-5" strokeWidth={2} />
             </div>
-            <p className="max-w-md text-sm text-text-secondary font-medium leading-relaxed">
-              Professional grade image cropping with WebAssembly-powered WebP &
-              AVIF export. Local-first speed, zero uploads.
-            </p>
+            <div>
+              <h1 className="text-xl font-bold tracking-widest uppercase font-display text-text">
+                Pandora <span className="text-accent">Crop</span>
+              </h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_5px_var(--color-success)]" />
+                <p className="text-[10px] font-mono text-text-secondary uppercase tracking-wider">
+                  System Active • v{APP_VERSION}
+                </p>
+                <div className="h-3 w-px bg-border mx-1" />
+                <p className="text-[10px] font-mono text-accent uppercase tracking-wider">
+                  Quick Export for Chrome Web Store Assets
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">
-                Mode
+            <div className="hidden md:flex flex-col items-end">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                Processing Mode
               </span>
-              <span className="text-xs font-bold text-text uppercase">
-                WASM + Client-Side
+              <span className="text-xs font-mono text-accent">
+                WASM_CLIENT_SIDE
               </span>
             </div>
-            <div className="h-8 w-px bg-border" />
+            <div className="h-8 w-px bg-border hidden md:block" />
             <Link
               to="/"
-              className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted hover:text-accent transition-colors"
+              className="text-[10px] font-bold uppercase tracking-widest text-text-muted hover:text-text transition-colors flex items-center gap-2 group"
             >
-              Back to Tools
+              <Undo2 className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+              Return
             </Link>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
           {/* Sidebar Settings */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-surface backdrop-blur-2xl border border-border rounded-sm p-6 flex flex-col gap-8">
+          <div className="lg:col-span-3 border-r border-border bg-bg-subtle/30 flex flex-col overflow-y-auto min-h-0">
+            <div className="p-6 space-y-8">
               {/* Export Settings */}
-              <section>
-                <div className="flex items-center gap-2 mb-4">
-                  <Settings2 className="w-4 h-4 text-accent" />
-                  <h2 className="text-sm font-bold uppercase tracking-widest text-text-secondary">
-                    Export
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-text-secondary flex items-center gap-2">
+                    <Settings2 className="w-3.5 h-3.5" />
+                    Export Config
                   </h2>
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-text-muted mb-2">
-                      Format
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(['webp', 'avif', 'jpeg', 'png'] as const).map((f) => (
-                        <button
-                          key={f}
-                          onClick={() => setFormat(f)}
-                          className={`px-3 py-2 rounded-sm text-xs font-bold transition-all border ${
-                            format === f
-                              ? 'bg-accent-muted border-accent text-accent'
-                              : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
+                  <div className="grid grid-cols-2 gap-1 p-1 bg-bg-inset rounded-sm border border-border">
+                    {(['webp', 'avif', 'jpeg', 'png'] as const).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setFormat(f)}
+                        className={`px-3 py-1.5 rounded-[1px] text-[10px] font-bold uppercase tracking-wide transition-all ${format === f
+                          ? 'bg-text-secondary text-bg-elevated shadow-sm'
+                          : 'text-text-muted hover:text-text hover:bg-surface-hover'
                           }`}
-                        >
-                          {f.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
+                      >
+                        {f}
+                      </button>
+                    ))}
                   </div>
 
                   {format !== 'png' && (
-                    <div>
-                      <label className="flex justify-between text-xs font-medium text-text-muted mb-2">
-                        <span>Quality</span>
-                        <span className="text-accent font-mono">
-                          {quality}%
-                        </span>
-                      </label>
-                      <input
-                        type="range"
-                        min="1"
-                        max="100"
-                        value={quality}
-                        onChange={(e) => setQuality(Number(e.target.value))}
-                        className="w-full accent-accent bg-bg-muted rounded-sm h-1"
-                      />
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] font-medium text-text-muted uppercase tracking-wider">
+                        <span>Compression Quality</span>
+                        <span className="text-accent font-mono">{quality}%</span>
+                      </div>
+                      <div className="relative h-4 flex items-center">
+                        <input
+                          type="range"
+                          min="1"
+                          max="100"
+                          value={quality}
+                          onChange={(e) => setQuality(Number(e.target.value))}
+                          className="w-full accent-accent bg-border h-[2px] rounded-none appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:rounded-none"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
               </section>
 
-              {/* Resize (Crop Area) Settings */}
-              <section>
-                <div className="flex items-center gap-2 mb-4">
-                  <Maximize className="w-4 h-4 text-secondary" />
-                  <h2 className="text-sm font-bold uppercase tracking-widest text-text-secondary">
-                    Resize
+              <div className="h-px bg-border w-full" />
+
+              {/* Resize Settings */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Maximize className="w-3.5 h-3.5 text-text-secondary" />
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-text-secondary">
+                    Geometry
                   </h2>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2 relative">
-                      <label className="text-xs text-text font-bold uppercase tracking-tight">
-                        Width
-                      </label>
-                      <input
-                        type="number"
-                        value={cropWidth}
-                        onChange={(e) => onCropWidthChange(e.target.value)}
-                        className="w-full bg-bg border border-border rounded-sm px-3 py-2.5 text-sm focus:border-secondary outline-none transition-all font-mono text-text"
-                        placeholder="W"
-                      />
-                    </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative group">
+                    <label className="absolute -top-2 left-2 px-1 bg-bg-subtle text-[9px] font-mono text-text-muted uppercase tracking-wider group-focus-within:text-accent transition-colors">
+                      Width
+                    </label>
+                    <input
+                      type="number"
+                      value={cropWidth}
+                      onChange={(e) => onCropWidthChange(e.target.value)}
+                      className="w-full bg-bg-inset border border-border rounded-sm px-3 py-2 text-xs font-mono text-text focus:border-accent outline-none transition-all placeholder:text-text-disabled"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-3 top-2.5 text-[10px] text-text-disabled font-mono">
+                      PX
+                    </span>
+                  </div>
 
-                    <div className="space-y-2">
-                      <label className="text-xs text-text font-bold uppercase tracking-tight">
-                        Height
-                      </label>
-                      <input
-                        type="number"
-                        value={cropHeight}
-                        onChange={(e) => onCropHeightChange(e.target.value)}
-                        className="w-full bg-bg border border-border rounded-sm px-3 py-2.5 text-sm focus:border-secondary outline-none transition-all font-mono text-text"
-                        placeholder="H"
-                      />
-                    </div>
+                  <div className="relative group">
+                    <label className="absolute -top-2 left-2 px-1 bg-bg-subtle text-[9px] font-mono text-text-muted uppercase tracking-wider group-focus-within:text-accent transition-colors">
+                      Height
+                    </label>
+                    <input
+                      type="number"
+                      value={cropHeight}
+                      onChange={(e) => onCropHeightChange(e.target.value)}
+                      className="w-full bg-bg-inset border border-border rounded-sm px-3 py-2 text-xs font-mono text-text focus:border-accent outline-none transition-all placeholder:text-text-disabled"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-3 top-2.5 text-[10px] text-text-disabled font-mono">
+                      PX
+                    </span>
                   </div>
                 </div>
               </section>
 
+              <div className="h-px bg-border w-full" />
+
               {/* Output Size Scaling */}
-              <section className="border-t border-border pt-6">
-                <div className="flex items-center justify-between w-full group mb-4">
+              <section className="space-y-4">
+                <div className="flex items-center justify-between w-full group">
                   <button
                     onClick={() => setIsOutputExpanded(!isOutputExpanded)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 hover:text-text transition-colors"
                   >
-                    <Download className="w-4 h-4 text-accent" />
-                    <h2 className="text-sm font-bold uppercase tracking-widest text-text-secondary group-hover:text-accent transition-colors">
-                      Output Size
+                    <div
+                      className={`transition-transform duration-200 ${isOutputExpanded ? 'rotate-90' : ''}`}
+                    >
+                      <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
+                    </div>
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-text-secondary group-hover:text-text">
+                      Output Scaling
                     </h2>
-                    {isOutputExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-text-muted" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-text-muted" />
-                    )}
                   </button>
                   {isOutputExpanded && (
                     <button
@@ -584,218 +609,273 @@ export default function ImageCropTool() {
                         e.stopPropagation()
                         resetOutputSize()
                       }}
-                      className="text-[10px] font-bold text-accent hover:text-accent-hover transition-colors flex items-center gap-1"
+                      className="text-[9px] font-bold text-accent hover:text-accent-hover transition-colors flex items-center gap-1 border border-accent/20 px-1.5 py-0.5 rounded-sm hover:bg-accent/10"
                     >
-                      <RefreshCw className="w-3 h-3" />
                       RESET
                     </button>
                   )}
                 </div>
 
                 {isOutputExpanded && (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="grid grid-cols-2 gap-4 relative">
-                      <div className="space-y-2">
-                        <label className="text-xs text-text font-bold uppercase tracking-tight">
+                  <div className="space-y-3 animate-in fade-in slide-in-from-left-2 duration-300 pl-4 border-l-2 border-border-subtle ml-1.5">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-mono text-text-muted uppercase">
                           Target W
                         </label>
                         <input
                           type="number"
                           value={outputWidth}
                           onChange={(e) => onOutputWidthChange(e.target.value)}
-                          className="w-full bg-bg border border-border rounded-sm px-3 py-2.5 text-sm focus:border-accent outline-none transition-all font-mono text-text"
+                          className="w-full bg-bg-inset border border-border rounded-sm px-2 py-1.5 text-xs font-mono text-accent focus:border-accent outline-none transition-all"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-xs text-text font-bold uppercase tracking-tight">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-mono text-text-muted uppercase">
                           Target H
                         </label>
                         <input
                           type="number"
                           value={outputHeight}
                           onChange={(e) => onOutputHeightChange(e.target.value)}
-                          className="w-full bg-bg border border-border rounded-sm px-3 py-2.5 text-sm focus:border-accent outline-none transition-all font-mono text-text"
+                          className="w-full bg-bg-inset border border-border rounded-sm px-2 py-1.5 text-xs font-mono text-accent focus:border-accent outline-none transition-all"
                         />
                       </div>
                     </div>
-                    <p className="text-[10px] text-text-secondary font-medium leading-tight italic px-1">
-                      * Final scale for export. Can exceed source resolution.
-                    </p>
                   </div>
                 )}
               </section>
 
+              <div className="h-px bg-border w-full" />
+
               {/* Aspect Ratio */}
-              <section>
-                <div className="flex items-center gap-2 mb-4">
-                  <CropIcon className="w-4 h-4 text-success" />
-                  <h2 className="text-sm font-bold uppercase tracking-widest text-text-secondary">
-                    Aspect
+              <section className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <CropIcon className="w-3.5 h-3.5 text-text-secondary" />
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-text-secondary">
+                    Aspect Ratio
                   </h2>
                 </div>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {[
-                    { label: 'Free', value: undefined, type: 'free' },
-                    { label: 'Custom', value: 'custom', type: 'custom' },
-                    { label: 'Preset', value: 'preset', type: 'preset-group' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.label}
-                      onClick={() => {
-                        if (opt.type === 'free') {
-                          setAspect(undefined)
-                          setIsCustom(false)
-                        } else if (opt.type === 'custom') {
-                          setIsCustom(true)
-                          parseCustomAspect(customAspectInput)
-                        } else {
-                          // Default to 1:1 if switching to presets group
-                          setAspect(1)
-                          setIsCustom(false)
-                          if (imgRef.current) {
-                            setCrop(
-                              centerAspectCrop(
-                                imgRef.current.width,
-                                imgRef.current.height,
-                                1,
-                              ),
-                            )
-                          }
-                        }
-                      }}
-                      className={`px-2 py-2 rounded-sm text-xs font-bold transition-all border ${
-                        (opt.type === 'free' &&
-                          aspect === undefined &&
-                          !isCustom) ||
-                        (opt.type === 'custom' && isCustom) ||
-                        (opt.type === 'preset-group' &&
-                          aspect !== undefined &&
-                          !isCustom)
-                          ? 'bg-success-muted border-success text-success'
-                          : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
 
-                {isCustom && (
-                  <div className="mb-4 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <label className="text-xs text-text font-bold uppercase block px-1 mb-2">
-                      Ratio (e.g. 16:9, 4/3)
-                    </label>
-                    <input
-                      type="text"
-                      value={customAspectInput}
-                      onChange={(e) => {
-                        setCustomAspectInput(e.target.value)
-                        parseCustomAspect(e.target.value)
-                      }}
-                      onBlur={(e) => {
-                        const formatted = parseCustomAspect(e.target.value)
-                        if (formatted) setCustomAspectInput(formatted)
-                      }}
-                      className="w-full bg-bg border border-border rounded-sm px-3 py-2.5 text-sm focus:border-success outline-none transition-all font-mono text-text"
-                      placeholder="W:H"
-                    />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-3 gap-2">
-                  {!isCustom && aspect !== undefined && (
-                    <>
-                      {[
-                        { label: '1:1', value: 1 },
-                        { label: '4:3', value: 4 / 3 },
-                        { label: '16:9', value: 16 / 9 },
-                        { label: '3:2', value: 3 / 2 },
-                        { label: '2:3', value: 2 / 3 },
-                      ].map((opt) => (
-                        <button
-                          key={opt.label}
-                          onClick={() => {
-                            setAspect(opt.value)
+                <div className="space-y-3">
+                  <div className="flex p-0.5 bg-bg-inset rounded-sm border border-border">
+                    {[
+                      { label: 'Free', value: undefined, type: 'free' },
+                      { label: 'Custom', value: 'custom', type: 'custom' },
+                      { label: 'Ratio', value: 'preset', type: 'common-group' },
+                      { label: 'Store', value: 'store', type: 'store-group' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.label}
+                        onClick={() => {
+                          if (opt.type === 'free') {
+                            setAspect(undefined)
+                            setIsCustom(false)
+                          } else if (opt.type === 'custom') {
+                            setIsCustom(true)
+                            parseCustomAspect(customAspectInput)
+                          } else if (opt.type === 'common-group') {
+                            setPresetGroup('common')
+                            setAspect(1)
+                            setIsCustom(false)
                             if (imgRef.current) {
-                              const { width, height } = imgRef.current
                               setCrop(
-                                centerAspectCrop(width, height, opt.value),
+                                centerAspectCrop(
+                                  imgRef.current.width,
+                                  imgRef.current.height,
+                                  1,
+                                ),
                               )
                             }
-                          }}
-                          className={`px-1 py-2 rounded-sm text-xs font-bold transition-all border ${
-                            aspect === opt.value
-                              ? 'bg-success-muted border-success text-success'
-                              : 'bg-bg-muted border-transparent text-text-muted hover:border-border-hover'
+                          } else if (opt.type === 'store-group') {
+                            setPresetGroup('store')
+                            setIsCustom(false)
+                            // Apply first store preset by default: CWS Icon
+                            applySizePreset(128, 128)
+                          }
+                        }}
+                        className={`flex-1 py-1.5 rounded-[1px] text-[10px] font-bold uppercase tracking-wide transition-all ${(opt.type === 'free' &&
+                          aspect === undefined &&
+                          !isCustom) ||
+                          (opt.type === 'custom' && isCustom) ||
+                          (opt.type === 'common-group' &&
+                            aspect !== undefined &&
+                            !isCustom &&
+                            presetGroup === 'common') ||
+                          (opt.type === 'store-group' &&
+                            !isCustom &&
+                            presetGroup === 'store')
+                          ? 'bg-text-secondary text-bg-elevated shadow-sm'
+                          : 'text-text-muted hover:text-text hover:bg-surface-hover'
                           }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </>
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {isCustom && (
+                    <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="relative group">
+                        <input
+                          type="text"
+                          value={customAspectInput}
+                          onChange={(e) => {
+                            setCustomAspectInput(e.target.value)
+                            parseCustomAspect(e.target.value)
+                          }}
+                          onBlur={(e) => {
+                            const formatted = parseCustomAspect(e.target.value)
+                            if (formatted) setCustomAspectInput(formatted)
+                          }}
+                          className="w-full bg-bg-inset border border-border rounded-sm px-3 py-2 text-xs font-mono text-text focus:border-accent outline-none transition-all"
+                          placeholder="RATIO (e.g. 16:9)"
+                        />
+                      </div>
+                    </div>
                   )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {!isCustom && aspect !== undefined && presetGroup === 'common' && (
+                      <>
+                        {[
+                          { label: '1:1', value: 1 },
+                          { label: '4:3', value: 4 / 3 },
+                          { label: '16:9', value: 16 / 9 },
+                          { label: '3:2', value: 3 / 2 },
+                          { label: '2:3', value: 2 / 3 },
+                        ].map((opt) => (
+                          <button
+                            key={opt.label}
+                            onClick={() => {
+                              setAspect(opt.value)
+                              if (imgRef.current) {
+                                const { width, height } = imgRef.current
+                                setCrop(
+                                  centerAspectCrop(width, height, opt.value),
+                                )
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-sm border text-[10px] font-mono font-medium transition-all ${aspect === opt.value
+                              ? 'bg-accent/10 border-accent text-accent'
+                              : 'bg-transparent border-border text-text-muted hover:border-text-muted hover:text-text'
+                              }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </>
+                    )}
+
+                    {!isCustom && presetGroup === 'store' && (
+                      <>
+                        {[
+                          { label: 'CWS Icon', w: 128, h: 128 },
+                          { label: 'Small Tile', w: 440, h: 280 },
+                          { label: 'Large Tile', w: 920, h: 680 },
+                          { label: 'Marquee', w: 1400, h: 560 },
+                          { label: 'Screenshot', w: 1280, h: 800 },
+                        ].map((opt) => (
+                          <button
+                            key={opt.label}
+                            onClick={() => applySizePreset(opt.w, opt.h)}
+                            className={`px-2.5 py-1.5 rounded-sm border text-[9px] font-mono font-medium transition-all ${outputWidth === opt.w.toString() && outputHeight === opt.h.toString()
+                              ? 'bg-accent/10 border-accent text-accent'
+                              : 'bg-transparent border-border text-text-muted hover:border-text-muted hover:text-text'
+                              }`}
+                          >
+                            {opt.label}
+                            <span className="block opacity-50 text-[8px] mt-0.5">{opt.w}×{opt.h}</span>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                  </div>
                 </div>
               </section>
             </div>
 
-            <div className="space-y-3">
+            {/* Action Area */}
+            <div className="mt-auto p-6 border-t border-border bg-bg-elevated/10">
               <button
                 onClick={handleDownload}
                 disabled={!completedCrop || isProcessing}
-                className={`w-full py-5 rounded-sm flex items-center justify-center gap-3 font-black text-lg transition-all relative overflow-hidden ${
-                  !completedCrop || isProcessing
-                    ? 'bg-bg-muted text-text-disabled cursor-not-allowed'
-                    : 'bg-linear-to-r from-accent to-secondary hover:scale-[1.02] active:scale-[0.98] text-text-inverted'
-                }`}
+                className={`w-full py-4 rounded-sm flex items-center justify-center gap-3 font-bold text-sm tracking-widest uppercase transition-all relative overflow-hidden group ${!completedCrop || isProcessing
+                  ? 'bg-bg-muted text-text-disabled cursor-not-allowed border border-border'
+                  : 'bg-text text-bg hover:bg-accent hover:text-white border border-transparent'
+                  }`}
               >
                 {showSuccess ? (
-                  <CheckCircle2 className="w-6 h-6 text-white animate-in zoom-in" />
+                  <CheckCircle2 className="w-5 h-5 animate-in zoom-in" />
                 ) : isProcessing ? (
-                  <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
+                  <RefreshCw className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Download className="w-6 h-6" />
+                  <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 )}
-                <span className="relative z-10">
+                <span>
                   {showSuccess
-                    ? 'COMPLETED'
+                    ? 'Export Complete'
                     : isProcessing
-                      ? 'PROCESSING...'
-                      : 'DOWNLOAD'}
+                      ? 'Processing...'
+                      : 'Process & Download'}
                 </span>
               </button>
             </div>
           </div>
 
           {/* Main Area */}
-          <div className="lg:col-span-2 h-full">
+          <div className="lg:col-span-9 relative bg-bg-angled overflow-hidden flex flex-col">
+
+
             {!imgSrc ? (
-              <label className="group relative flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-accent-muted rounded-sm h-full min-h-[600px] bg-surface backdrop-blur-md transition-all cursor-pointer overflow-hidden">
+              <label className="flex-1 flex flex-col items-center justify-center m-6 border border-dashed border-border hover:border-accent/50 hover:bg-accent/5 transition-all cursor-pointer group relative overflow-hidden rounded-sm">
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
                   onChange={onSelectFile}
                 />
-                <div className="absolute inset-0 bg-linear-to-br from-accent-subtle to-secondary-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative flex flex-col items-center">
-                  <div className="mb-8 p-10">
-                    <Upload className="w-16 h-16 text-text-muted" />
+
+                {/* Decorative corners */}
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-text-muted group-hover:border-accent transition-colors" />
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-text-muted group-hover:border-accent transition-colors" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-text-muted group-hover:border-accent transition-colors" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-text-muted group-hover:border-accent transition-colors" />
+
+                <div className="relative flex flex-col items-center z-10 space-y-6">
+                  <div className="w-20 h-20 bg-bg-elevated rounded-full flex items-center justify-center border border-border group-hover:scale-110 transition-transform duration-300 shadow-xl">
+                    <Upload className="w-8 h-8 text-text-muted group-hover:text-accent transition-colors" />
                   </div>
-                  <h3 className="text-3xl font-black mb-3">DROP ASSETS</h3>
-                  <p className="text-text-muted font-medium">
-                    Supports JPG, PNG, WEBP, AVIF
-                  </p>
+                  <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-display font-bold text-text tracking-widest uppercase">
+                      Initialize Workspace
+                    </h3>
+                    <p className="text-text-muted font-mono text-[10px] bg-bg-inset px-4 py-1.5 border border-border/50 rounded-sm">
+                      [DROP ASSETS • CLICK TO BROWSE • <span className="text-accent">CTRL+V</span> TO PASTE]
+                    </p>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    {['JPG', 'PNG', 'WEBP', 'AVIF'].map((type) => (
+                      <span
+                        key={type}
+                        className="px-2 py-1 bg-bg-surface border border-border rounded-[1px] text-[10px] font-bold text-text-disabled"
+                      >
+                        {type}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </label>
             ) : (
-              <div className="flex flex-col gap-6 h-full">
-                <div className="flex items-center justify-between shrink-0 mb-4">
-                  <div className="flex items-center gap-6">
+              <div className="relative w-full h-full flex flex-col">
+                {/* Workspace Toolbar */}
+                <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                  <div className="bg-bg-elevated/80 backdrop-blur-md border border-border rounded-sm px-3 py-1.5 flex items-center gap-3 shadow-lg">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-text-muted uppercase tracking-tighter">
-                        Resize (Crop)
+                      <span className="text-[9px] font-bold text-text-muted uppercase tracking-wider">
+                        Active Selection
                       </span>
-                      <span className="text-lg font-black text-accent font-mono">
+                      <span className="text-sm font-mono font-bold text-accent">
                         {cropWidth
                           ? `${cropWidth} × ${cropHeight}`
                           : 'No Selection'}
@@ -822,7 +902,7 @@ export default function ImageCropTool() {
                           {Math.round(
                             (imgRef.current.width /
                               imgRef.current.naturalWidth) *
-                              100,
+                            100,
                           )}
                           %
                         </span>
@@ -830,16 +910,15 @@ export default function ImageCropTool() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center border border-border rounded-sm overflow-hidden mr-4">
+                    <div className="flex items-center border border-border rounded-sm overflow-hidden mr-4 shadow-lg bg-bg-elevated/80 backdrop-blur-md">
                       <button
                         onClick={undo}
                         disabled={historyIndex === 0}
                         title="Undo (Ctrl+Z)"
-                        className={`p-2 border-r border-border transition-colors ${
-                          historyIndex === 0
-                            ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
-                            : 'text-text hover:bg-surface-hover'
-                        }`}
+                        className={`p-2 border-r border-border transition-colors ${historyIndex === 0
+                          ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
+                          : 'text-text hover:bg-surface-hover'
+                          }`}
                       >
                         <Undo2 className="w-4 h-4" />
                       </button>
@@ -847,11 +926,10 @@ export default function ImageCropTool() {
                         onClick={redo}
                         disabled={historyIndex >= history.length - 1}
                         title="Redo (Ctrl+Shift+Z)"
-                        className={`p-2 transition-colors ${
-                          historyIndex >= history.length - 1
-                            ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
-                            : 'text-text hover:bg-surface-hover'
-                        }`}
+                        className={`p-2 transition-colors ${historyIndex >= history.length - 1
+                          ? 'text-text-disabled bg-bg-muted cursor-not-allowed'
+                          : 'text-text hover:bg-surface-hover'
+                          }`}
                       >
                         <Redo2 className="w-4 h-4" />
                       </button>
@@ -859,33 +937,48 @@ export default function ImageCropTool() {
                   </div>
                 </div>
 
-                <div className="grow bg-bg-muted border border-border rounded-sm overflow-hidden flex items-center justify-center p-4 min-h-[500px] relative">
-                  <ReactCrop
-                    crop={crop}
-                    onChange={(c) => setCrop(c)}
-                    onComplete={(c) => {
-                      setCompletedCrop(c)
-                      pushToHistory(c)
-                    }}
-                    aspect={aspect}
-                    className="max-h-full max-w-full"
-                  >
-                    <img
-                      ref={imgRef}
-                      alt="Crop target"
-                      src={imgSrc}
-                      onLoad={onImageLoad}
-                      className="max-h-[70vh] w-auto shadow-2xl"
-                    />
-                  </ReactCrop>
-                  <button
-                    onClick={() => setImgSrc('')}
-                    className="absolute top-4 right-4 bg-surface/50 backdrop-blur-md border border-border p-2 rounded-sm hover:bg-red-500/20 hover:border-red-500/50 text-text-muted hover:text-red-500 transition-all z-10"
-                    title="Clear Image"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
+                <div className="grow bg-bg-angled border-t border-b border-border overflow-hidden flex items-center justify-center p-8 relative">
+                  <div className="relative shadow-2xl shadow-black/50 border border-border/20">
+                    <ReactCrop
+                      crop={crop}
+                      onChange={(_, percentCrop) => {
+                        setCrop(percentCrop)
+                      }}
+                      onComplete={(c) => {
+                        setCompletedCrop(c)
+                        const w =
+                          imgRef.current &&
+                          (c.width * imgRef.current.naturalWidth) /
+                          imgRef.current.width
+                        const h =
+                          imgRef.current &&
+                          (c.height * imgRef.current.naturalHeight) /
+                          imgRef.current.height
+                        if (w && h) {
+                          pushToHistory(c)
+                        }
+                      }}
+                      aspect={aspect}
+                      className="max-h-[calc(100vh-200px)]"
+                    >
+                      <img
+                        ref={imgRef}
+                        alt="Crop target"
+                        src={imgSrc}
+                        onLoad={onImageLoad}
+                        className="max-h-[calc(100vh-200px)] w-auto block"
+                      />
+                    </ReactCrop>
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => setImgSrc('')}
+                  className="absolute top-4 right-4 bg-surface/50 backdrop-blur-md border border-border p-2 rounded-sm hover:bg-danger-muted hover:border-danger text-text-muted hover:text-danger transition-all z-10"
+                  title="Clear Image"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
               </div>
             )}
           </div>

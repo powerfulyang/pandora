@@ -3,18 +3,16 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import {
   ArrowRight,
   Box,
-  Command,
-  Cpu,
   Image as ImageIcon,
   LayoutGrid,
   Terminal,
-  Wifi,
   Zap,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import ThemeToggle from '@/components/ThemeToggle'
+import { ClientClock, ClientDate } from '@/components/TimeWidgets'
 
 export const Route = createFileRoute('/')({ component: Home })
 
@@ -51,7 +49,7 @@ function Home() {
       id: 'img-crop',
       title: 'Image Processor',
       icon: <ImageIcon strokeWidth={1.5} />,
-      desc: 'WASM-powered cropping & format conversion.',
+      desc: '快速导出 Chrome Web Store 需要的图标与宣传图。',
       href: '/image-crop',
       status: 'ONLINE',
       stats: ['Local WASM', 'WebP/AVIF'],
@@ -115,15 +113,7 @@ function Home() {
         </div>
 
         <div className="flex items-center gap-6 text-xs font-mono text-text-muted">
-          <div className="hidden md:flex items-center gap-2">
-            <span className="text-secondary font-bold">RAM</span>
-            <span>40%</span>
-          </div>
-          <div className="hidden md:flex items-center gap-2">
-            <span className="text-success font-bold">NET</span>
-            <Wifi className="w-3 h-3" />
-          </div>
-          <div className="h-4 w-px bg-border" />
+
           <ThemeToggle />
         </div>
       </header>
@@ -141,7 +131,7 @@ function Home() {
 
             <div className="relative z-10 flex flex-col items-start h-full justify-center">
               <div className="gsap-hero-title inline-flex items-center gap-2 px-3 py-1 bg-accent/5 border border-accent/20 text-accent text-[10px] font-bold tracking-widest mb-8 rounded-[2px]">
-                <Zap className="w-3 h-3" /> SYSTEM READY v2.1.0
+                <Zap className="w-3 h-3" /> SYSTEM READY v{APP_VERSION}
               </div>
 
               <h1 className="gsap-hero-title text-5xl md:text-7xl lg:text-8xl font-display font-black tracking-tighter text-text mb-6 uppercase leading-[0.9]">
@@ -150,7 +140,7 @@ function Home() {
                 <span className="text-text-muted">Toolbox</span>
               </h1>
 
-              <p className="gsap-hero-title max-w-xl text-text-secondary text-lg leading-relaxed font-light mb-8">
+              <p className="gsap-hero-title font-mono max-w-xl text-text-secondary text-lg leading-relaxed font-light mb-8">
                 Advanced browser-based utilities. Local-first architecture. No
                 server uploads. Maximum privacy.
               </p>
@@ -160,11 +150,8 @@ function Home() {
                   to="/image-crop"
                   className="px-6 py-3 bg-text text-bg font-bold text-sm tracking-wide hover:bg-accent hover:text-white transition-colors uppercase"
                 >
-                  Launch Module
+                  Launch Image Processor
                 </Link>
-                <div className="px-6 py-3 border border-border text-text-secondary font-mono text-xs uppercase tracking-wide">
-                  Documentation
-                </div>
               </div>
             </div>
           </div>
@@ -174,46 +161,39 @@ function Home() {
             <div className="flex-1 p-6 border-b border-border bg-bg flex flex-col justify-center">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-mono text-text-muted uppercase tracking-widest">
-                  Active Processes
+                  Available Modules
                 </span>
-                <Cpu className="w-4 h-4 text-text-muted" />
+                <LayoutGrid className="w-4 h-4 text-text-muted" />
               </div>
               <div className="text-4xl font-black font-mono text-text mb-2">
-                04
+                {tools
+                  .filter((t) => t.status === 'ONLINE')
+                  .length.toString()
+                  .padStart(2, '0')}
               </div>
               <div className="h-1 w-full bg-border/50 rounded-none overflow-hidden">
-                <div className="h-full w-[35%] bg-accent animate-pulse" />
+                <div
+                  className="h-full bg-success"
+                  style={{
+                    width: `${(tools.filter((t) => t.status === 'ONLINE').length / tools.length) * 100}%`,
+                  }}
+                />
               </div>
             </div>
 
-            <div className="flex-1 p-6 border-b border-border bg-bg flex flex-col justify-center hover:bg-bg-elevated transition-colors cursor-pointer group">
-              <div className="flex items-center gap-3 text-text-muted group-hover:text-accent transition-colors mb-4">
-                <Command className="w-5 h-5" />
-                <span className="text-sm font-bold uppercase tracking-wide">
-                  Command Palette
-                </span>
-              </div>
-              <div className="h-10 border border-border bg-bg-subtle/50 flex items-center px-4 gap-2 text-text-disabled text-sm font-mono group-hover:border-accent/30 transition-colors">
-                <span className="text-accent">{'>'}</span>
-                <span className="text-text-muted">search_tools...</span>
-                <span className="animate-pulse w-2 h-4 bg-accent/50 ml-auto" />
-              </div>
-            </div>
-
-            <div className="flex-1 p-6 bg-bg flex items-center justify-between">
+            <div className="flex-1 p-6 bg-bg flex flex-col justify-center gap-6">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-text-muted uppercase">
-                  Framework
+                <span className="text-[10px] font-bold text-text-muted uppercase mb-1">
+                  Local Time
                 </span>
-                <span className="text-sm font-mono text-text">
-                  TanStack Start
-                </span>
+                <ClientClock />
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-bold text-text-muted uppercase">
-                  Build
+              <div className="h-px w-full bg-border/50" />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-text-muted uppercase mb-1">
+                  Date
                 </span>
-                <span className="text-sm font-mono text-success">Stable</span>
+                <ClientDate />
               </div>
             </div>
           </div>
@@ -312,20 +292,12 @@ function Home() {
       {/* Status Footer */}
       <footer className="border-t border-border bg-bg text-[10px] uppercase font-mono text-text-muted">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-success" />
-              <span>System Normal</span>
-            </div>
-            <span>
-              Latency: <span className="text-text">12ms</span>
-            </span>
-            <span className="hidden md:inline">
-              Region: <span className="text-text">Localhost</span>
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-success" />
+            <span>System Online</span>
           </div>
           <div className="flex items-center gap-2 mt-4 md:mt-0">
-            <span>Pandora Corp</span>
+            <span>Pandora</span>
             <span className="text-border">|</span>
             <span>Inc 2026</span>
           </div>

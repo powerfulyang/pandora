@@ -17,37 +17,50 @@ export interface ProcessOptions {
  * Extracts image data from a specific crop area of an image element.
  */
 export function getCroppedImageData(
-  image: HTMLImageElement,
+  source: ImageBitmap | HTMLImageElement | HTMLCanvasElement | OffscreenCanvas,
   cropX: number,
   cropY: number,
   cropWidth: number,
   cropHeight: number,
+  scaleX: number,
+  scaleY: number,
 ): ImageData {
-  const canvas = document.createElement('canvas')
-  const scaleX = image.naturalWidth / image.width
-  const scaleY = image.naturalHeight / image.height
+  const width = Math.round(cropWidth * scaleX)
+  const height = Math.round(cropHeight * scaleY)
 
-  canvas.width = cropWidth * scaleX
-  canvas.height = cropHeight * scaleY
+  let canvas: HTMLCanvasElement | OffscreenCanvas
+  if (typeof OffscreenCanvas !== 'undefined') {
+    canvas = new OffscreenCanvas(width, height)
+  } else {
+    if (typeof document === 'undefined') {
+      throw new Error('Canvas not supported in this environment')
+    }
+    canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+  }
 
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  const ctx = canvas.getContext('2d', { willReadFrequently: true }) as
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D
+    | null
   if (!ctx) {
     throw new Error('Failed to get 2D context')
   }
 
   ctx.drawImage(
-    image,
+    source as CanvasImageSource,
     cropX * scaleX,
     cropY * scaleY,
     cropWidth * scaleX,
     cropHeight * scaleY,
     0,
     0,
-    canvas.width,
-    canvas.height,
+    width,
+    height,
   )
 
-  return ctx.getImageData(0, 0, canvas.width, canvas.height)
+  return ctx.getImageData(0, 0, width, height)
 }
 
 /**
@@ -95,16 +108,3 @@ export async function processAndEncodeImage(
   return new Blob([buffer], { type: `image/${options.format}` })
 }
 
-/**
- * Triggers a file download in the browser.
- */
-export function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}

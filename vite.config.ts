@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { URL, fileURLToPath } from 'node:url'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
@@ -8,6 +9,8 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import { cloudflare } from '@cloudflare/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
+
 const jsquashExternals = {
   '@jsquash/avif': 'https://esm.sh/@jsquash/avif@2.1.1',
   '@jsquash/jpeg': 'https://esm.sh/@jsquash/jpeg@1.6.0',
@@ -17,6 +20,9 @@ const jsquashExternals = {
 }
 
 const config = defineConfig({
+  define: {
+    APP_VERSION: JSON.stringify(pkg.version),
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -43,17 +49,20 @@ const config = defineConfig({
       },
     },
   },
-  optimizeDeps: {
-    exclude: Object.keys(jsquashExternals),
-  },
-  build: {
-    rollupOptions: {
-      external: Object.keys(jsquashExternals),
-      output: {
-        paths: jsquashExternals,
-      },
-    },
-  },
+  // optimizeDeps: {
+  //   exclude: Object.keys(jsquashExternals),
+  // },
+  // build: {
+  //   rollupOptions: {
+  //     external: Object.keys(jsquashExternals),
+  //     output: {
+  //       paths: jsquashExternals,
+  //     },
+  //   },
+  // },
+  // ssr: {
+  //   external: Object.keys(jsquashExternals),
+  // },
 })
 
 export default config
