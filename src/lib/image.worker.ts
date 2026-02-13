@@ -1,10 +1,14 @@
 import * as Comlink from 'comlink'
-import { processAndEncodeImage, type ProcessOptions } from './image-processor'
+import { processAndEncodeImage } from './image-processor'
+import type { ProcessOptions } from './image-processor'
 
 const api = {
-  processAndEncodeImage: async (imageData: ImageData, options: ProcessOptions) => {
+  processAndEncodeImage: async (
+    imageData: ImageData,
+    options: ProcessOptions,
+  ) => {
     return processAndEncodeImage(imageData, options)
-  }
+  },
 }
 
 Comlink.expose(api)

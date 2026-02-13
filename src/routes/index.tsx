@@ -1,150 +1,336 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Image as ImageIcon, Sparkles } from 'lucide-react'
+import { useRef } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import {
+  ArrowRight,
+  Box,
+  Command,
+  Cpu,
+  Image as ImageIcon,
+  LayoutGrid,
+  Terminal,
+  Wifi,
+  Zap,
+} from 'lucide-react'
+import { motion } from 'framer-motion'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 import ThemeToggle from '@/components/ThemeToggle'
 
-export const Route = createFileRoute('/')({ component: App })
+export const Route = createFileRoute('/')({ component: Home })
 
-function App() {
+function Home() {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // GSAP Animation for "System Ready" text scramble effect
+  useGSAP(
+    () => {
+      const tl = gsap.timeline()
+
+      tl.from('.gsap-hero-title', {
+        duration: 1,
+        y: 50,
+        opacity: 0,
+        ease: 'power3.out',
+        stagger: 0.2,
+      }).from(
+        '.gsap-hero-deco',
+        {
+          duration: 1.5,
+          opacity: 0,
+          scale: 0.9,
+          ease: 'power2.out',
+        },
+        '-=0.5',
+      )
+    },
+    { scope: containerRef },
+  )
+
   const tools = [
     {
-      icon: <ImageIcon className="w-6 h-6" />,
-      title: 'Image Crop',
-      tag: 'WASM',
-      description:
-        'Professional grade image cropping with WebAssembly-powered WebP & AVIF export.',
+      id: 'img-crop',
+      title: 'Image Processor',
+      icon: <ImageIcon strokeWidth={1.5} />,
+      desc: 'WASM-powered cropping & format conversion.',
       href: '/image-crop',
-      color: 'text-accent',
-      bg: 'bg-accent-subtle/50',
+      status: 'ONLINE',
+      stats: ['Local WASM', 'WebP/AVIF'],
     },
-    // More tools can be added here in the future
+    {
+      id: 'todo',
+      title: 'Task Manager',
+      icon: <Terminal strokeWidth={1.5} />,
+      desc: 'Local-first persistent task tracking protocol.',
+      href: '/todo',
+      status: 'ONLINE',
+      stats: ['Local Storage', 'Persistence'],
+    },
+    {
+      id: 'compress',
+      title: 'Compressor',
+      icon: <Box strokeWidth={1.5} />,
+      desc: 'Lossless compression engine.',
+      href: '#',
+      status: 'OFFLINE',
+      stats: ['Module Missing'],
+    },
   ]
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring' as const,
+        stiffness: 100,
+      },
+    },
+  }
+
   return (
-    <div className="min-h-screen bg-bg text-text font-sans selection:bg-selection relative selection:text-accent">
-      {/* Background Ambience */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-accent-subtle/20 rounded-full blur-[140px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-secondary-subtle/20 rounded-full blur-[140px]" />
-        {/* Fine Grain Texture via CSS Pattern */}
-        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[radial-gradient(#888_1px,transparent_1px)] [background-size:24px_24px]" />
-      </div>
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-bg text-text font-sans selection:bg-accent/20 selection:text-accent flex flex-col"
+    >
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 h-14">
+        <div className="flex items-center gap-4">
+          <div className="w-5 h-5 bg-accent/10 border border-accent flex items-center justify-center rounded-[2px]">
+            <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+          </div>
+          <span className="font-display font-bold tracking-widest text-sm uppercase">
+            Pandora<span className="text-text-muted">///OS</span>
+          </span>
+        </div>
 
-      {/* Theme Toggle — integrated more subtly */}
-      <div className="fixed top-8 right-8 z-50">
-        <ThemeToggle />
-      </div>
+        <div className="flex items-center gap-6 text-xs font-mono text-text-muted">
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-secondary font-bold">RAM</span>
+            <span>40%</span>
+          </div>
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-success font-bold">NET</span>
+            <Wifi className="w-3 h-3" />
+          </div>
+          <div className="h-4 w-px bg-border" />
+          <ThemeToggle />
+        </div>
+      </header>
 
-      <main className="relative max-w-7xl mx-auto px-6 pt-20 pb-20">
-        {/* Compact Tool-First Header */}
-        <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-border/50 border-b">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent shadow-accent/30 shadow-[0_0_20px]">
-                <Sparkles className="w-4 h-4 text-text-inverted" />
+      {/* Main Content */}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto p-4 md:p-8 flex flex-col gap-10">
+        {/* Hero Section */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-border border border-border">
+          {/* Hero Title Card */}
+          <div className="col-span-1 lg:col-span-8 bg-bg p-8 md:p-12 border-b lg:border-b-0 border-border relative overflow-hidden group">
+            {/* Background Deco */}
+            <div className="gsap-hero-deco absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700">
+              <Box className="w-96 h-96 stroke-1" />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-start h-full justify-center">
+              <div className="gsap-hero-title inline-flex items-center gap-2 px-3 py-1 bg-accent/5 border border-accent/20 text-accent text-[10px] font-bold tracking-widest mb-8 rounded-[2px]">
+                <Zap className="w-3 h-3" /> SYSTEM READY v2.1.0
               </div>
-              <h1 className="text-4xl font-black tracking-tighter uppercase font-display italic">
-                Pandora<span className="text-accent ml-1">Toolbox</span>
+
+              <h1 className="gsap-hero-title text-5xl md:text-7xl lg:text-8xl font-display font-black tracking-tighter text-text mb-6 uppercase leading-[0.9]">
+                Pandora
+                <br />
+                <span className="text-text-muted">Toolbox</span>
               </h1>
+
+              <p className="gsap-hero-title max-w-xl text-text-secondary text-lg leading-relaxed font-light mb-8">
+                Advanced browser-based utilities. Local-first architecture. No
+                server uploads. Maximum privacy.
+              </p>
+
+              <div className="gsap-hero-title flex items-center gap-4">
+                <Link
+                  to="/image-crop"
+                  className="px-6 py-3 bg-text text-bg font-bold text-sm tracking-wide hover:bg-accent hover:text-white transition-colors uppercase"
+                >
+                  Launch Module
+                </Link>
+                <div className="px-6 py-3 border border-border text-text-secondary font-mono text-xs uppercase tracking-wide">
+                  Documentation
+                </div>
+              </div>
             </div>
-            <p className="max-w-md text-sm text-text-secondary font-medium leading-relaxed">
-              Privacy-centric, high-performance web utilities running entirely in
-              your browser. Local-first speed, zero uploads.
-            </p>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status</span>
-              <span className="text-xs font-bold text-text uppercase">All Systems Ready</span>
+          {/* Stats / Controls Sidebar */}
+          <div className="col-span-1 lg:col-span-4 bg-bg-subtle/10 flex flex-col">
+            <div className="flex-1 p-6 border-b border-border bg-bg flex flex-col justify-center">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-mono text-text-muted uppercase tracking-widest">
+                  Active Processes
+                </span>
+                <Cpu className="w-4 h-4 text-text-muted" />
+              </div>
+              <div className="text-4xl font-black font-mono text-text mb-2">
+                04
+              </div>
+              <div className="h-1 w-full bg-border/50 rounded-none overflow-hidden">
+                <div className="h-full w-[35%] bg-accent animate-pulse" />
+              </div>
             </div>
-            <div className="h-8 w-px bg-border" />
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">Vibe</span>
-              <span className="text-xs font-bold text-text uppercase">Local-First WASM</span>
+
+            <div className="flex-1 p-6 border-b border-border bg-bg flex flex-col justify-center hover:bg-bg-elevated transition-colors cursor-pointer group">
+              <div className="flex items-center gap-3 text-text-muted group-hover:text-accent transition-colors mb-4">
+                <Command className="w-5 h-5" />
+                <span className="text-sm font-bold uppercase tracking-wide">
+                  Command Palette
+                </span>
+              </div>
+              <div className="h-10 border border-border bg-bg-subtle/50 flex items-center px-4 gap-2 text-text-disabled text-sm font-mono group-hover:border-accent/30 transition-colors">
+                <span className="text-accent">{'>'}</span>
+                <span className="text-text-muted">search_tools...</span>
+                <span className="animate-pulse w-2 h-4 bg-accent/50 ml-auto" />
+              </div>
+            </div>
+
+            <div className="flex-1 p-6 bg-bg flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-text-muted uppercase">
+                  Framework
+                </span>
+                <span className="text-sm font-mono text-text">
+                  TanStack Start
+                </span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-bold text-text-muted uppercase">
+                  Build
+                </span>
+                <span className="text-sm font-mono text-success">Stable</span>
+              </div>
             </div>
           </div>
-        </header>
+        </section>
 
-        {/* Tools Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border/50 border border-border/50 backdrop-blur-sm shadow-2xl animate-in fade-in zoom-in-95 duration-700">
-          {tools.map((tool, index) => (
-            <Link
-              key={index}
-              to={tool.href}
-              className="group relative bg-bg p-10 transition-all duration-500 hover:bg-surface-hover overflow-hidden"
-            >
-              {/* Hover Glow */}
-              <div className="absolute -inset-px bg-linear-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        {/* Grid Header */}
+        <div className="flex items-center gap-4">
+          <LayoutGrid className="w-4 h-4 text-accent" />
+          <h2 className="text-sm font-bold tracking-widest uppercase text-text">
+            Modules Directory
+          </h2>
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-xs font-mono text-text-muted">01—03</span>
+        </div>
 
-              <div className="relative flex flex-col h-full">
-                <div className="flex items-start justify-between mb-12">
-                  <div className={`p-4 rounded-none ${tool.bg} border border-border group-hover:border-accent/30 transition-colors duration-500`}>
-                    <div className={tool.color}>{tool.icon}</div>
+        {/* Tools Grid - Animated with Framer Motion */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border border border-border"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-100px' }}
+        >
+          {tools.map((tool) => (
+            <motion.div key={tool.id} variants={itemVariants}>
+              <Link
+                to={tool.href}
+                className={`group relative bg-bg p-8 min-h-[280px] flex flex-col justify-between transition-all hover:bg-bg-elevated overflow-hidden h-full ${tool.status === 'OFFLINE' ? 'pointer-events-none opacity-60 grayscale' : ''}`}
+              >
+                {/* Hover Tech Markers */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                <div className="flex justify-between items-start">
+                  <div
+                    className={`p-3 rounded-none border ${tool.status === 'ONLINE' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-bg-muted border-border text-text-muted'}`}
+                  >
+                    {tool.icon}
                   </div>
-                  <span className="text-[10px] font-black tracking-widest text-text-muted px-2 py-1 border border-border uppercase">
-                    {tool.tag}
+                  <span
+                    className={`text-[10px] font-mono font-bold px-2 py-1 uppercase tracking-wider ${tool.status === 'ONLINE' ? 'bg-success/10 text-success' : 'bg-bg-muted text-text-disabled'}`}
+                  >
+                    {tool.status}
                   </span>
                 </div>
 
-                <div className="mt-auto">
-                  <h3 className="text-3xl font-black mb-4 tracking-tight uppercase italic group-hover:text-accent transition-colors duration-300">
+                <div className="mt-8">
+                  <h3 className="text-2xl font-display font-black uppercase mb-2 group-hover:text-accent transition-colors">
                     {tool.title}
                   </h3>
-                  <p className="text-text-secondary leading-relaxed font-light text-sm group-hover:text-text transition-colors duration-500">
-                    {tool.description}
+                  <p className="text-xs text-text-secondary font-mono mb-6 leading-relaxed">
+                    {tool.desc}
                   </p>
+
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {tool.stats.map((stat) => (
+                      <span
+                        key={stat}
+                        className="text-[10px] border border-border/50 bg-bg-subtle/50 px-2 py-1 text-text-muted uppercase"
+                      >
+                        {stat}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Arrow Decoration */}
-                <div className="mt-12 flex items-center justify-end">
-                  <div className="w-16 h-px bg-border group-hover:w-20 group-hover:bg-accent transition-all duration-500" />
-                  <svg
-                    className="w-4 h-4 ml-2 text-border group-hover:text-accent transition-colors duration-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    />
-                  </svg>
+                {/* Action Arrow */}
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-text-muted group-hover:text-text transition-colors">
+                  <span>Execute</span>
+                  <ArrowRight className="w-4 h-4 text-accent transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
 
           {/* Empty Slots */}
-          {[1, 2].map((i) => (
-            <div
-              key={`empty-${i}`}
-              className="hidden md:flex bg-bg/50 p-10 items-center justify-center border-border/20"
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              variants={itemVariants}
+              className="hidden lg:flex bg-bg-angled p-8 items-center justify-center opacity-40"
             >
-              <div className="text-[10px] font-black text-text-muted/30 uppercase tracking-[0.4em]">
-                Slot {i + 1} Empty
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-full border border-dashed border-text-disabled/50" />
+                <span className="font-mono text-[10px] tracking-widest text-text-disabled uppercase">
+                  Empty Slot 0{i + 1}
+                </span>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
+      </main>
 
-        {/* Minimal Footer */}
-        <footer className="mt-24 pt-12 border-t border-border flex flex-col md:flex-row items-center justify-between gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-          <div className="flex items-center gap-6">
-            <img src="/logo.svg" alt="Pandora" className="h-6 w-auto opacity-50" />
-            <div className="h-4 w-px bg-border" />
-            <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted">
-              Built for Performance
+      {/* Status Footer */}
+      <footer className="border-t border-border bg-bg text-[10px] uppercase font-mono text-text-muted">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-success" />
+              <span>System Normal</span>
+            </div>
+            <span>
+              Latency: <span className="text-text">12ms</span>
+            </span>
+            <span className="hidden md:inline">
+              Region: <span className="text-text">Localhost</span>
             </span>
           </div>
-          <img
-            src="/tanstack-word-logo-white.svg"
-            alt="TanStack"
-            className="h-4 dark:invert-0 invert"
-          />
-        </footer>
-      </main>
+          <div className="flex items-center gap-2 mt-4 md:mt-0">
+            <span>Pandora Corp</span>
+            <span className="text-border">|</span>
+            <span>Inc 2026</span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

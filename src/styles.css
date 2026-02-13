@@ -2,9 +2,9 @@
    Google Fonts: Inter (body), Outfit (display), JetBrains Mono (code)
    Must be before @import "tailwindcss" per CSS spec.
    ────────────────────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Outfit:wght@100..900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Outfit:wght@100..900&display=swap');
 
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ──────────────────────────────────────────────────────────────
    Custom dark variant: driven by .dark class on <html>
@@ -17,10 +17,10 @@
    ────────────────────────────────────────────────────────────── */
 @theme {
   /* Font families — generates font-sans, font-display, font-mono */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "Fira Code",
-    monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
 
   /* Semantic color tokens — mapped from CSS variables below */
   --color-bg: var(--pd-bg);
@@ -144,7 +144,7 @@
   /* Text */
   --pd-text: #ffffff;
   --pd-text-secondary: #d4d4d8;
-  --pd-text-muted: #a1a1aa; 
+  --pd-text-muted: #a1a1aa;
   --pd-text-disabled: #71717a;
   --pd-text-inverted: #09090b;
 
@@ -185,7 +185,7 @@ body {
 
 /* Fine Grain Texture Overlay */
 body::before {
-  content: "";
+  content: '';
   position: fixed;
   top: 0;
   left: 0;
@@ -200,6 +200,34 @@ body::before {
 
 .dark body::before {
   opacity: 0.15;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Utilities
+   ────────────────────────────────────────────────────────────── */
+@utility bg-bg-angled {
+  background-color: var(--pd-bg-subtle);
+  background-image:
+    linear-gradient(
+      45deg,
+      var(--pd-border-subtle) 25%,
+      transparent 25%,
+      transparent 75%,
+      var(--pd-border-subtle) 75%,
+      var(--pd-border-subtle)
+    ),
+    linear-gradient(
+      45deg,
+      var(--pd-border-subtle) 25%,
+      transparent 25%,
+      transparent 75%,
+      var(--pd-border-subtle) 75%,
+      var(--pd-border-subtle)
+    );
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    10px 10px;
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -220,17 +248,17 @@ body::before {
   height: 100%;
 }
 
-[data-transition-direction="expand"]::view-transition-old(root) {
+[data-transition-direction='expand']::view-transition-old(root) {
   z-index: 1;
 }
-[data-transition-direction="expand"]::view-transition-new(root) {
+[data-transition-direction='expand']::view-transition-new(root) {
   z-index: 999;
 }
 
-[data-transition-direction="shrink"]::view-transition-old(root) {
+[data-transition-direction='shrink']::view-transition-old(root) {
   z-index: 999;
 }
-[data-transition-direction="shrink"]::view-transition-new(root) {
+[data-transition-direction='shrink']::view-transition-new(root) {
   z-index: 1;
 }
 

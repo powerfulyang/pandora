@@ -16,20 +16,20 @@ export interface ProcessOptions {
 /**
  * Extracts image data from a specific crop area of an image element.
  */
-export async function getCroppedImageData(
+export function getCroppedImageData(
   image: HTMLImageElement,
   cropX: number,
   cropY: number,
   cropWidth: number,
   cropHeight: number,
-): Promise<ImageData> {
+): ImageData {
   const canvas = document.createElement('canvas')
   const scaleX = image.naturalWidth / image.width
   const scaleY = image.naturalHeight / image.height
-  
+
   canvas.width = cropWidth * scaleX
   canvas.height = cropHeight * scaleY
-  
+
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
   if (!ctx) {
     throw new Error('Failed to get 2D context')

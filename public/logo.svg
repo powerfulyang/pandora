@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cold, precision workstation aesthetic for Pandora -->
+  <!-- Designed to work as a favicon (white on transparent) -->
+  
+  <!-- Subtle Grid Pattern -->
+  <path d="M64 64H448V448H64V64Z" stroke="white" stroke-opacity="0.1" stroke-width="1"/>
+  <path d="M128 64V448M192 64V448M256 64V448M320 64V448M384 64V448" stroke="white" stroke-opacity="0.05" stroke-width="1"/>
+  <path d="M64 128H448M64 192H448M64 256H448M64 320H448M64 384H448" stroke="white" stroke-opacity="0.05" stroke-width="1"/>
+  
+  <!-- Main Logo Mark: Stylized Pandora's Box / Geometric P -->
+  <!-- Outer Frame -->
+  <path d="M160 160H352V352H160V160Z" stroke="white" stroke-width="12" stroke-linejoin="round"/>
+  
+  <!-- Inner Detail: Technical Schematic -->
+  <path d="M160 160L256 256L352 160" stroke="white" stroke-opacity="0.5" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M160 352L256 256L352 352" stroke="white" stroke-opacity="0.5" stroke-width="6" stroke-linejoin="round"/>
+  
+  <!-- Central Core -->
+  <rect x="236" y="236" width="40" height="40" stroke="white" stroke-width="8"/>
+  <rect x="248" y="248" width="16" height="16" fill="white"/>
+  
+  <!-- Corner Accents (Precision Markers) -->
+  <path d="M140 160H160V140" stroke="white" stroke-width="6"/>
+  <path d="M352 140V160H372" stroke="white" stroke-width="6"/>
+  <path d="M372 352H352V372" stroke="white" stroke-width="6"/>
+  <path d="M160 372V352H140" stroke="white" stroke-width="6"/>
+</svg>
