@@ -12,7 +12,7 @@ function App() {
       tag: 'WASM',
       description:
         'Professional grade image cropping with WebAssembly-powered WebP & AVIF export.',
-      href: '/demo/image-crop',
+      href: '/image-crop',
       color: 'text-accent',
       bg: 'bg-accent-subtle/50',
     },
@@ -51,7 +51,7 @@ function App() {
               your browser. Local-first speed, zero uploads.
             </p>
           </div>
-          
+
           <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Status</span>
@@ -75,7 +75,7 @@ function App() {
             >
               {/* Hover Glow */}
               <div className="absolute -inset-px bg-linear-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              
+
               <div className="relative flex flex-col h-full">
                 <div className="flex items-start justify-between mb-12">
                   <div className={`p-4 rounded-none ${tool.bg} border border-border group-hover:border-accent/30 transition-colors duration-500`}>
@@ -132,11 +132,11 @@ function App() {
         {/* Minimal Footer */}
         <footer className="mt-24 pt-12 border-t border-border flex flex-col md:flex-row items-center justify-between gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
           <div className="flex items-center gap-6">
-             <img src="/logo.svg" alt="Pandora" className="h-6 w-auto opacity-50" />
-             <div className="h-4 w-px bg-border" />
-             <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted">
-               Built for Performance
-             </span>
+            <img src="/logo.svg" alt="Pandora" className="h-6 w-auto opacity-50" />
+            <div className="h-4 w-px bg-border" />
+            <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted">
+              Built for Performance
+            </span>
           </div>
           <img
             src="/tanstack-word-logo-white.svg"
