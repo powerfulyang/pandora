@@ -32,3 +32,5 @@ coverage
 src/auto-typings/*
 src/orval/*
 !src/orval/.gitkeep
+
+.vite-ssg-temp

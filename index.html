@@ -4,7 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vue Starter Template</title>
+    <meta
+      name="description"
+      content="Pandora — Local-First Browser Toolbox. Privacy-first image processing, JSON tools, and more."
+    />
+    <title>Pandora | Local-First Toolbox</title>
+    <script>
+      // Prevent FOUC — apply dark mode immediately
+      ;(function () {
+        const theme = localStorage.getItem('pandora-theme') || 'system'
+        const isDark =
+          theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (isDark) document.documentElement.classList.add('dark')
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

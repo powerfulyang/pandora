@@ -1,7 +1,6 @@
 import type { UserConfig } from 'vite'
 import type { ViteSSGOptions } from 'vite-ssg'
 import process from 'node:process'
-/// <reference types="vite-ssg" />
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
@@ -13,7 +12,9 @@ import { VueRouterAutoImports } from 'unplugin-vue-router'
 import VueRouter from 'unplugin-vue-router/vite'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import topLevelAwait from 'vite-plugin-top-level-await'
 import Layouts from 'vite-plugin-vue-layouts'
+import wasm from 'vite-plugin-wasm'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import AutoIconServerPlugin from './plugins/icon'
 
@@ -24,6 +25,8 @@ interface Configuration extends UserConfig {
 // https://vite.dev/config/
 export default defineConfig({
   //
+  //
+  assetsInclude: ['**/*.wasm'],
   build: {
     rollupOptions: {
       //
@@ -36,16 +39,28 @@ export default defineConfig({
   },
   //
   optimizeDeps: {
-    exclude: [],
+    exclude: [
+      '@jsquash/avif',
+      '@jsquash/jpeg',
+      '@jsquash/webp',
+      '@jsquash/resize',
+      '@jsquash/oxipng',
+    ],
   },
   css: {
     preprocessorOptions: {
       scss: {},
-      less: {},
     },
   },
   server: {
     host: true,
+  },
+  worker: {
+    format: 'es',
+    plugins: () => [wasm(), topLevelAwait()],
+    rollupOptions: {
+      output: {},
+    },
   },
   ssgOptions: {
     script: 'async',
@@ -53,8 +68,8 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
         name: 'Vue Starter Template',
         short_name: 'VueApp',
@@ -73,7 +88,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm}'],
+        maximumFileSizeToCacheInBytes: 10485760, // 10MB
+        cleanupOutdatedCaches: true,
       },
     }),
     AutoIconServerPlugin(),
@@ -101,6 +118,8 @@ export default defineConfig({
       layoutsDirs: 'src/layouts',
       defaultLayout: 'default',
     }),
+    wasm(),
+    topLevelAwait(),
     vue(),
     vueJsx(),
     UnoCSS(),

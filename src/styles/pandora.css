@@ -1,0 +1,231 @@
+/* ──────────────────────────────────────────────────────────────
+   Google Fonts: Outfit (display), JetBrains Mono (default/mono)
+   ────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Outfit:wght@100..900&display=swap');
+
+/* ──────────────────────────────────────────────────────────────
+   Light Theme (Clinical Variant)
+   ────────────────────────────────────────────────────────────── */
+.light,
+:root {
+  --pd-bg: #ffffff;
+  --pd-bg-subtle: #f4f4f5;
+  --pd-bg-muted: #e4e4e7;
+  --pd-bg-elevated: #ffffff;
+  --pd-bg-inset: #fafafa;
+
+  --pd-surface: rgba(255, 255, 255, 0.95);
+  --pd-surface-hover: #f4f4f5;
+
+  /* Borders */
+  --pd-border: #e4e4e7;
+  --pd-border-subtle: #f4f4f5;
+  --pd-border-hover: #d4d4d8;
+
+  /* Text */
+  --pd-text: #000000;
+  --pd-text-secondary: #27272a;
+  --pd-text-muted: #52525b;
+  --pd-text-disabled: #a1a1aa;
+  --pd-text-inverted: #ffffff;
+
+  /* Accent — Black in Light Mode */
+  --pd-accent: #000000;
+  --pd-accent-hover: #18181b;
+  --pd-accent-muted: rgba(0, 0, 0, 0.1);
+  --pd-accent-subtle: rgba(0, 0, 0, 0.05);
+
+  /* Secondary — Zinc 600 */
+  --pd-secondary: #52525b;
+  --pd-secondary-hover: #27272a;
+  --pd-secondary-muted: rgba(82, 82, 91, 0.1);
+  --pd-secondary-subtle: rgba(82, 82, 91, 0.05);
+
+  /* Status */
+  --pd-success: #166534;
+  --pd-success-muted: rgba(22, 101, 52, 0.1);
+  --pd-danger: #b91c1c;
+  --pd-danger-muted: rgba(185, 28, 28, 0.1);
+  --pd-warning: #b45309;
+  --pd-warning-muted: rgba(180, 83, 9, 0.1);
+
+  /* Effects */
+  --pd-overlay: rgba(0, 0, 0, 0.4);
+  --pd-selection: rgba(0, 0, 0, 0.1);
+  --pd-shadow: rgba(0, 0, 0, 0.05);
+
+  color-scheme: light;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Dark Theme (Default - Workstation / The Vault)
+   ────────────────────────────────────────────────────────────── */
+.dark {
+  /* Backgrounds */
+  --pd-bg: #09090b; /* Zinc 950 */
+  --pd-bg-subtle: #18181b; /* Zinc 900 */
+  --pd-bg-muted: #27272a; /* Zinc 800 */
+  --pd-bg-elevated: #1c1c1f;
+  --pd-bg-inset: #09090b;
+
+  /* Surfaces */
+  --pd-surface: rgba(24, 24, 27, 0.4);
+  --pd-surface-hover: rgba(39, 39, 42, 0.6);
+
+  /* Borders */
+  --pd-border: rgba(63, 63, 70, 0.4);
+  --pd-border-subtle: rgba(39, 39, 42, 0.4);
+  --pd-border-hover: rgba(113, 113, 122, 0.5);
+
+  /* Text */
+  --pd-text: #ffffff;
+  --pd-text-secondary: #d4d4d8; /* Zinc 300 */
+  --pd-text-muted: #a1a1aa; /* Zinc 400 */
+  --pd-text-disabled: #52525b; /* Zinc 600 */
+  --pd-text-inverted: #09090b;
+
+  /* Accent — Pure White for High Precision */
+  --pd-accent: #ffffff;
+  --pd-accent-hover: #f4f4f5;
+  --pd-accent-muted: rgba(255, 255, 255, 0.1);
+  --pd-accent-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Secondary — Zinc 400 */
+  --pd-secondary: #a1a1aa;
+  --pd-secondary-hover: #d4d4d8;
+  --pd-secondary-muted: rgba(161, 161, 170, 0.15);
+  --pd-secondary-subtle: rgba(161, 161, 170, 0.05);
+
+  /* Status */
+  --pd-success: #4ade80;
+  --pd-success-muted: rgba(74, 222, 128, 0.1);
+  --pd-danger: #f87171;
+  --pd-danger-muted: rgba(248, 113, 113, 0.1);
+  --pd-warning: #fbbf24;
+  --pd-warning-muted: rgba(251, 191, 36, 0.1);
+
+  /* Effects */
+  --pd-overlay: rgba(0, 0, 0, 0.7);
+  --pd-selection: rgba(255, 255, 255, 0.2);
+  --pd-shadow: rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Base Styles
+   ────────────────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  background-color: var(--pd-bg);
+  color: var(--pd-text);
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--pd-selection);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   View Transition Styles
+   ────────────────────────────────────────────────────────────── */
+::view-transition-group(root),
+::view-transition-image-pair(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+  display: block;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  width: 100%;
+  height: 100%;
+}
+
+[data-transition-direction='expand']::view-transition-old(root) {
+  z-index: 1;
+}
+
+[data-transition-direction='expand']::view-transition-new(root) {
+  z-index: 999;
+}
+
+[data-transition-direction='shrink']::view-transition-old(root) {
+  z-index: 999;
+}
+
+[data-transition-direction='shrink']::view-transition-new(root) {
+  z-index: 1;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Custom Scrollbar
+   ────────────────────────────────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--pd-border);
+  border-radius: 0px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--pd-accent);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Utility Classes
+   ────────────────────────────────────────────────────────────── */
+.bg-bg-angled {
+  background-color: var(--pd-bg-subtle);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Crect width='10' height='10' fill='rgba(128,128,128,0.05)' /%3E%3Crect x='10' y='10' width='10' height='10' fill='rgba(128,128,128,0.05)' /%3E%3C/svg%3E");
+}
+
+/* ──────────────────────────────────────────────────────────────
+   JSON Viewer Theme Overrides (vue-json-pretty)
+   ────────────────────────────────────────────────────────────── */
+.vjs-tree {
+  font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+}
+
+.vjs-tree .vjs-key {
+  color: var(--pd-accent) !important;
+}
+
+.vjs-tree .vjs-value__string {
+  color: var(--pd-success) !important;
+}
+
+.vjs-tree .vjs-value__number {
+  color: var(--pd-secondary) !important;
+}
+
+.vjs-tree .vjs-value__boolean {
+  color: var(--pd-warning) !important;
+}
+
+.vjs-tree .vjs-value__null {
+  color: var(--pd-danger) !important;
+}
+
+/* react-image-crop overrides for Vue port */
+.ReactCrop {
+  position: relative;
+  display: inline-block;
+  cursor: crosshair;
+  overflow: hidden;
+}

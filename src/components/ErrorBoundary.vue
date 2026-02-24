@@ -14,21 +14,21 @@ function reset() {
 </script>
 
 <template>
-  <div v-if="error" class="m-4 p-6 border border-red-200 rounded-xl bg-red-50 shadow-sm">
+  <div v-if="error" class="m-4 p-6 border border-pd-danger/20 rounded-sm bg-pd-danger/5 shadow-sm">
     <div class="mb-4 flex gap-3 items-center">
-      <div class="i-carbon:error-filled text-red-500 h-6 w-6" />
-      <h3 class="text-lg text-red-800 font-bold">
-        Something went wrong
+      <div class="i-carbon:error-filled text-pd-danger h-6 w-6" />
+      <h3 class="text-lg text-pd-danger tracking-tight font-bold uppercase">
+        System Exception
       </h3>
     </div>
-    <div class="text-sm text-red-700 font-mono mb-4 p-4 rounded-lg bg-red-100/50 max-h-60 overflow-auto">
+    <div class="text-sm text-pd-danger/80 mb-4 p-4 rounded-sm bg-pd-danger/10 max-h-60 overflow-auto">
       {{ error.message }}
     </div>
     <button
-      class="text-sm text-white font-medium px-4 py-2 rounded-lg bg-red-600 shadow-sm transition-colors hover:bg-red-700"
+      class="text-sm text-pd-bg font-medium px-4 py-2 rounded-sm bg-pd-text shadow-sm transition-colors hover:bg-pd-accent"
       @click="reset"
     >
-      Try again
+      Reset Module
     </button>
   </div>
   <slot v-else />
