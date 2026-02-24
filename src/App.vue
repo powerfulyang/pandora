@@ -1,15 +1,22 @@
 <script setup lang="ts">
+// No script needed for now
 </script>
 
 <template>
-  <router-view v-slot="{ Component }">
-    <keep-alive>
-      <component :is="Component" v-if="$route.meta.keepAlive" :key="$route.path" />
-    </keep-alive>
-    <!--    please keep attention to the key, querystring change will not trigger component unmount -->
-    <component :is="Component" v-if="!$route.meta.keepAlive" :key="$route.path" />
-  </router-view>
+  <ErrorBoundary>
+    <router-view v-slot="{ Component }">
+      <keep-alive>
+        <component :is="Component" v-if="$route.meta?.keepAlive" :key="$route.path" />
+      </keep-alive>
+      <!-- please keep attention to the key, querystring change will not trigger component unmount -->
+      <component :is="Component" v-if="!$route.meta?.keepAlive" :key="$route.path" />
+    </router-view>
+  </ErrorBoundary>
 </template>
 
-<style scoped>
+<style>
+/* Global transitions or styles can go here */
+#app {
+  height: 100vh;
+}
 </style>

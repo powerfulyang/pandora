@@ -1,32 +1,41 @@
-import type { KyRequest, KyResponse, NormalizedOptions } from 'ky'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { isEmpty, omit } from 'lodash-es'
-import { parse } from 'qs'
 import { getBase64 } from '@/utils/getBase64'
 import logger from '.'
 
 export async function logRequest(
-  request: KyRequest,
-  options: NormalizedOptions,
+  config: AxiosRequestConfig,
 ) {
-  Reflect.defineMetadata('startTime', performance.now(), options)
-  const cloned = request.clone()
-  const requestUrl = new URL(cloned.url)
-  // method
-  const method = cloned.method
-  const url = `${requestUrl.origin}${requestUrl.pathname}`
+  const startTime = performance.now()
+  // @ts-expect-error custom property
+  config.startTime = startTime
+
+  const method = config.method?.toUpperCase() || 'GET'
+  const url = config.url || ''
+
   // headers
-  const _headers = cloned.headers
-  const contentType = _headers.get('content-type')
+  const _headers = config.headers || {}
+  const contentType = (_headers['content-type'] || _headers['Content-Type']) as string
   const headers = omit(
-    Object.fromEntries(_headers.entries()),
-    'content-type',
+    _headers as Record<string, any>,
+    ['content-type', 'Content-Type'],
   )
+
   // params
-  const params = parse(requestUrl.searchParams.toString())
-  // json body
-  let json = {} as Record<string, any>
-  if (contentType?.includes('application/json')) {
-    json = await cloned.json()
+  const params = config.params || {}
+
+  // data
+  let json = {} as any
+  if (contentType?.includes('application/json') && typeof config.data === 'string') {
+    try {
+      json = JSON.parse(config.data)
+    }
+    catch {
+      json = config.data
+    }
+  }
+  else if (config.data !== undefined && config.data !== null) {
+    json = config.data
   }
 
   console.groupCollapsed(
@@ -57,7 +66,7 @@ export async function logRequest(
 
   if (!isEmpty(json)) {
     console.groupCollapsed(
-      `%c📦 Request Body %c${contentType} %o`,
+      `%c📦 Request Body %c${contentType || 'unknown'} %o`,
       'color: #3498db; font-size: 11px',
       'background: #3498db; color: #fff; padding: 2px; border-radius: 2px; margin-left: 4px;',
       json,
@@ -66,21 +75,18 @@ export async function logRequest(
     console.groupEnd()
   }
 
-  if (contentType?.includes('multipart/form-data')) {
-    const data = await cloned.formData()
+  if (config.data instanceof FormData) {
     console.groupCollapsed(
       `%c📦 Request Body %c${contentType} %o`,
       'color: #3498db; font-size: 11px',
       'background: #3498db; color: #fff; padding: 2px; border-radius: 2px; margin-left: 4px;',
-      data,
+      config.data,
     )
 
-    for (const [key, value] of data.entries()) {
+    for (const [key, value] of (config.data as any).entries()) {
       if (value instanceof File) {
-        // 文件转成 base64
         const dataURL = await getBase64(value)
         if (value.type.startsWith('image/')) {
-          // 图片直接展示
           console.log(
             `%c${key} %c=> %c🖼️`,
             'color: #3498db',
@@ -99,7 +105,6 @@ export async function logRequest(
           )
         }
         else {
-          // 其他文件转成 url
           const url = URL.createObjectURL(value)
           console.log(
             `%c${key} %c=> %c${url}`,
@@ -124,28 +129,27 @@ export async function logRequest(
 }
 
 export async function logResponse(
-  request: KyRequest,
-  options: NormalizedOptions,
-  response: KyResponse,
+  response: AxiosResponse,
 ) {
-  const cloned = response.clone()
-  const url = new URL(request.url)
-  // headers
-  const _headers = cloned.headers
-  const contentType = _headers.get('content-type')
+  const config = response.config
+  const url = config.url || ''
+  const _headers = response.headers || {}
+  const contentType = (_headers['content-type'] || _headers['Content-Type']) as string
   const headers = omit(
-    Object.fromEntries(_headers.entries()),
-    'content-type',
+    _headers as Record<string, any>,
+    ['content-type', 'Content-Type'],
   )
-  const startTime = Reflect.getMetadata('startTime', options)
+
+  // @ts-expect-error custom property
+  const startTime = config.startTime
   const endTime = performance.now()
-  const duration = (endTime - startTime).toFixed(0)
+  const duration = startTime ? (endTime - startTime).toFixed(0) : '?'
 
   console.groupCollapsed(
     `%c${response.status}%c %c⚡${duration}ms%c 🌐 ${url}`,
     `color: #fff; background: ${response.status >= 200 && response.status < 300 ? '#2ecc71' : '#e74c3c'}; font-weight: bold; font-size: 10px; padding: 2px; border-radius: 2px;`,
     'color: inherit',
-    `color: #fff; background: ${Number(duration) > 1000 ? '#e74c3c' : '#2ecc71'}; font-size: 10px; padding: 2px; border-radius: 2px;`,
+    `color: #fff; background: ${duration === '?' || Number(duration) > 1000 ? '#e74c3c' : '#2ecc71'}; font-size: 10px; padding: 2px; border-radius: 2px;`,
     'color: inherit',
   )
 
@@ -159,9 +163,8 @@ export async function logResponse(
     console.groupEnd()
   }
 
-  let json = {}
+  const json = response.data
   if (contentType?.includes('application/json')) {
-    json = await cloned.json()
     if (!isEmpty(json)) {
       console.groupCollapsed(
         `%c📦 Response Body %c${contentType} %o`,
@@ -174,7 +177,7 @@ export async function logResponse(
     }
   }
   else if (contentType?.startsWith('image/')) {
-    const dataURL = await getBase64(await cloned.blob())
+    const dataURL = await getBase64(new Blob([response.data]))
     console.groupCollapsed(
       `%c📦 Response Body %c${contentType}`,
       'color: #3498db; font-size: 11px',
@@ -193,15 +196,13 @@ export async function logResponse(
     console.groupEnd()
   }
   else {
-    const blob = await cloned.blob()
-    const url = URL.createObjectURL(blob)
     console.groupCollapsed(
-      `%c📦 Response Body %c${contentType} %c${url}`,
+      `%c📦 Response Body %c${contentType} %o`,
       'color: #3498db; font-size: 11px',
       'background: #3498db; color: #fff; padding: 2px; border-radius: 2px; margin-left: 4px;',
-      'background: #2ecc71; color: #fff; padding: 2px; border-radius: 2px; margin-left: 4px;',
+      json,
     )
-    logger.debug(await blob.text())
+    logger.debug(json)
     console.groupEnd()
   }
   console.groupEnd()

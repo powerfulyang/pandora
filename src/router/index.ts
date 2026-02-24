@@ -1,13 +1,6 @@
-import type { App } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router/auto'
-import { routes } from 'vue-router/auto-routes'
+import type { Router } from 'vue-router'
 
-export const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-})
-
-export async function setupRouter(app: App) {
-  app.use(router)
-  await router.isReady()
+export function setupRouter(_router: Router) {
+  // Add global navigation guards or other router configurations here
+  // router.beforeEach(...)
 }

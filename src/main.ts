@@ -1,4 +1,6 @@
-import { createApp } from 'vue'
+import { setupLayouts } from 'virtual:generated-layouts'
+import { ViteSSG } from 'vite-ssg'
+import { routes } from 'vue-router/auto-routes'
 import { setupAssets } from '@/assets'
 import { setupPlugins } from '@/plugins'
 import { setupRouter } from '@/router'
@@ -7,16 +9,25 @@ import { setupVueQuery } from '@/vue-query/setupVueQuery'
 import App from './App.vue'
 import 'reflect-metadata'
 
-async function bootstrap() {
-  const app = createApp(App)
+setupPlugins()
+setupAssets()
 
-  setupPlugins()
-  setupAssets()
-  setupVueQuery(app)
-  setupStore(app)
-  await setupRouter(app)
+export const createApp = ViteSSG(
+  App,
+  {
+    routes: setupLayouts([...routes]),
+    base: import.meta.env.BASE_URL,
+  },
+  ({ app, router }) => {
+    // Global Error Handling
+    app.config.errorHandler = (err, instance, info) => {
+      console.error('[@Error]', err)
+      console.log('[@Instance]', instance)
+      console.log('[@Info]', info)
+    }
 
-  app.mount('#app')
-}
-
-void bootstrap()
+    setupVueQuery(app)
+    setupStore(app)
+    setupRouter(router)
+  },
+)

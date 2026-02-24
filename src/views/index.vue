@@ -1,187 +1,132 @@
 <script lang="ts" setup>
 import { motion } from 'motion-v'
-import { usePostWhisperGenerateSubtitle } from '@/orval/service'
 
-const headers = new Headers()
-
-const { isPending: isPendingUpload, mutate: mutateUpload } = usePostWhisperGenerateSubtitle(
+// Layout configuration
+const features = [
   {
-    request: {
-      debug: true,
-      headers,
-    },
-    mutation: {
-      onSuccess: (data) => {
-        console.log(data)
-      },
-      onError: (error) => {
-        console.log(error)
-      },
-    },
+    icon: 'i-material-symbols:rocket-launch-rounded',
+    title: 'Modern Stack',
+    description: 'Built with Vue 3, Vite, TypeScript and UnoCSS for maximum developer velocity.',
+    color: 'from-blue-400 to-indigo-500',
   },
-)
-
-const uploadFile1 = ref<File | null>(null)
-const text = ref('hello')
-
-function onFileChange1(e: Event) {
-  uploadFile1.value = (e.target as HTMLInputElement).files?.[0] || null
-}
-
-function submitUpload() {
-  headers.set('custom-header', 'custom-value')
-  mutateUpload({
-    data: {
-      file: uploadFile1.value!,
-      enable_vocal_separation: false,
-    },
-  })
-}
+  {
+    icon: 'i-material-symbols:auto-awesome-rounded',
+    title: 'Premium Design',
+    description: 'Sophisticated aesthetics featuring motion-v animations and curated color palettes.',
+    color: 'from-purple-400 to-pink-500',
+  },
+  {
+    icon: 'i-material-symbols:speed-rounded',
+    title: 'High Performance',
+    description: 'Optimized for speed with SSG support, PWA capabilities, and minimal bundle size.',
+    color: 'from-amber-400 to-orange-500',
+  },
+]
 </script>
 
 <template>
-  <div class="min-h-screen from-purple-50 to-blue-50 bg-gradient-to-br p-6">
-    <div class="mx-auto max-w-4xl">
-      <!-- 图标演示卡片 -->
-      <motion.div
-        :initial="{ opacity: 0, x: -50 }"
-        :animate="{ opacity: 1, x: 0 }"
-        :transition="{ duration: 0.6, delay: 0.4 }"
-        class="mb-6 overflow-hidden rounded-2xl bg-white shadow-lg"
-      >
-        <div class="from-amber-400 to-orange-500 bg-gradient-to-r p-4">
-          <h2 class="flex items-center gap-2 text-white font-semibold">
-            <div class="i-material-symbols:auto-awesome h-1.2em w-1.2em" />
-            UnoCSS + Iconify 图标
-          </h2>
-        </div>
-        <div class="p-6">
-          <p class="mb-4 text-gray-700">
-            你可以通过 UnoCSS 使用 Iconify 图标库中的所有图标
-          </p>
-          <div class="flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-600">示例：</span>
-              <motion.div
-                :animate="{ rotate: 360 }"
-                :transition="{ duration: 2, repeat: Infinity, ease: 'linear' }"
-                class="i-material-symbols:emoticon-rounded h-2em w-2em text-blue-500"
-              />
-            </div>
-            <div class="i-carbon-star h-1.5em w-1.5em text-yellow-500" />
-            <div class="i-carbon-lightning h-1.5em w-1.5em text-purple-500" />
-          </div>
-        </div>
-      </motion.div>
-
-      <!-- 文件上传卡片 -->
-      <motion.div
-        :initial="{ opacity: 0, x: 50 }"
-        :animate="{ opacity: 1, x: 0 }"
-        :transition="{ duration: 0.6, delay: 0.6 }"
-        class="overflow-hidden rounded-2xl bg-white shadow-lg"
-      >
-        <div class="from-green-400 to-blue-500 bg-gradient-to-r p-4">
-          <h2 class="flex items-center gap-2 text-white font-semibold">
-            <div class="i-carbon-cloud-upload h-1.2em w-1.2em" />
-            文件上传演示
-          </h2>
-        </div>
-        <div class="p-6">
-          <div class="space-y-4">
-            <!-- 文件选择区域 -->
-            <div class="relative">
-              <label class="mb-2 block text-sm text-gray-700 font-medium">
-                选择文件
-              </label>
-              <div class="relative">
-                <input
-                  type="file"
-                  class="block w-full text-sm text-gray-500 transition-colors file:mr-4 file:border-0 file:rounded-full file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:text-blue-700 file:font-semibold hover:file:bg-blue-100"
-                  @change="onFileChange1"
-                >
-              </div>
-              <p v-if="uploadFile1" class="mt-2 text-xs text-green-600">
-                已选择: {{ uploadFile1.name }}
-              </p>
-            </div>
-
-            <!-- 文本输入 -->
-            <div>
-              <label class="mb-2 block text-sm text-gray-700 font-medium">
-                文本输入
-              </label>
-              <input
-                v-model="text"
-                type="text"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="请输入文本..."
-              >
-            </div>
-
-            <!-- 上传按钮 -->
-            <div class="flex items-center gap-3">
-              <motion.button
-                :while-hover="{ scale: 1.05 }"
-                :while-tap="{ scale: 0.95 }"
-                :disabled="!uploadFile1 || isPendingUpload"
-                class="flex items-center gap-2 rounded-lg from-blue-500 to-purple-600 bg-gradient-to-r px-6 py-3 text-white font-medium shadow-lg transition-all disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-400 hover:shadow-xl"
-                @click="submitUpload"
-              >
-                <motion.div
-                  v-if="isPendingUpload"
-                  :animate="{ rotate: 360 }"
-                  :transition="{ duration: 1, repeat: Infinity, ease: 'linear' }"
-                  class="i-line-md:loading-twotone-loop h-1em w-1em"
-                />
-                <div v-else class="i-carbon-upload h-1em w-1em" />
-                {{ isPendingUpload ? '上传中...' : '开始上传' }}
-              </motion.button>
-
-              <p class="text-sm text-gray-500">
-                点击按钮上传文件
-              </p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      <!-- 动画演示框 -->
-      <motion.div
-        :initial="{ opacity: 0, y: 50 }"
-        :animate="{ opacity: 1, y: 0 }"
-        :transition="{ duration: 0.6, delay: 0.8 }"
-        class="mt-6 overflow-hidden rounded-2xl bg-white shadow-lg"
-      >
-        <div class="from-pink-400 to-purple-500 bg-gradient-to-r p-4">
-          <h2 class="flex items-center gap-2 text-white font-semibold">
-            <div class="i-carbon-play h-1.2em w-1.2em" />
-            Motion 动画演示
-          </h2>
-        </div>
-        <div class="p-6">
-          <div class="flex flex-wrap gap-4">
-            <motion.div
-              class="h-16 w-16 rounded-xl from-blue-400 to-purple-500 bg-gradient-to-br shadow-lg"
-              :animate="{ rotate: 360 }"
-              :transition="{ duration: 3, repeat: Infinity, ease: 'linear' }"
-            />
-            <motion.div
-              class="h-16 w-16 rounded-xl from-green-400 to-blue-500 bg-gradient-to-br shadow-lg"
-              :animate="{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }"
-              :transition="{ duration: 2, repeat: Infinity, ease: 'easeInOut' }"
-            />
-            <motion.div
-              class="h-16 w-16 rounded-xl from-pink-400 to-red-500 bg-gradient-to-br shadow-lg"
-              :animate="{ y: [0, -20, 0] }"
-              :transition="{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }"
-            />
-          </div>
-          <p class="mt-4 text-sm text-gray-600">
-            这些是使用 motion-v 创建的动画效果演示
-          </p>
-        </div>
-      </motion.div>
+  <div class="bg-white min-h-screen relative overflow-hidden dark:bg-slate-950 selection:bg-indigo-100">
+    <!-- Sophisticated Background Gradients -->
+    <div class="pointer-events-none inset-0 absolute overflow-hidden">
+      <div class="rounded-full bg-blue-100/50 h-96 w-96 absolute blur-3xl dark:bg-blue-900/20 -left-20 -top-24" />
+      <div class="rounded-full bg-purple-100/50 h-96 w-96 top-1/2 absolute blur-3xl dark:bg-purple-900/20 -right-20" />
+      <div class="rounded-full bg-indigo-100/30 h-96 w-96 left-1/2 absolute blur-3xl dark:bg-indigo-900/10 -translate-x-1/2 -bottom-24" />
     </div>
+
+    <!-- Main Content -->
+    <main class="mx-auto px-6 py-24 max-w-7xl relative z-10 lg:px-8 sm:py-32">
+      <div class="text-center">
+        <!-- Badge -->
+        <motion.div
+          :initial="{ opacity: 0, y: 20 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.6 }"
+          class="text-sm text-indigo-600 font-medium mb-8 px-3 py-1 rounded-full bg-indigo-50 inline-flex ring-1 ring-indigo-200 ring-inset items-center dark:text-indigo-300 dark:bg-indigo-900/30 dark:ring-indigo-800"
+        >
+          <span class="mr-2 rounded-full bg-indigo-500 h-2 w-2 animate-pulse" />
+          Vue Starter Template
+        </motion.div>
+
+        <!-- Hero Title -->
+        <motion.h1
+          :initial="{ opacity: 0, scale: 0.95 }"
+          :animate="{ opacity: 1, scale: 1 }"
+          :transition="{ duration: 0.8, delay: 0.2 }"
+          class="text-5xl text-slate-900 tracking-tight font-bold mb-6 sm:text-7xl dark:text-white"
+        >
+          Build for the
+          <span class="text-transparent from-indigo-500 to-pink-500 via-purple-500 bg-gradient-to-r bg-clip-text">
+            Next Generation
+          </span>
+        </motion.h1>
+
+        <!-- Hero Subtitle -->
+        <motion.p
+          :initial="{ opacity: 0 }"
+          :animate="{ opacity: 1 }"
+          :transition="{ duration: 0.8, delay: 0.4 }"
+          class="text-lg text-slate-600 leading-8 mx-auto max-w-2xl dark:text-slate-400"
+        >
+          A meticulously crafted starter template designed for developers who value speed,
+          type-safety, and exceptional user experience right out of the box.
+        </motion.p>
+
+        <!-- CTA Buttons -->
+        <motion.div
+          :initial="{ opacity: 0, y: 30 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.6, delay: 0.6 }"
+          class="mt-10 flex gap-x-6 items-center justify-center"
+        >
+          <button
+            class="text-sm text-white font-semibold px-8 py-4 rounded-xl bg-indigo-600 shadow-xl transition-all hover:bg-indigo-500 hover:shadow-indigo-500/25 active:scale-95"
+          >
+            Get Started
+          </button>
+          <a
+            href="https://github.com/powerfulyang/vue-starter-template"
+            target="_blank"
+            class="group text-sm text-slate-900 leading-6 font-semibold flex items-center dark:text-white"
+          >
+            Github Repo
+            <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
+          </a>
+        </motion.div>
+      </div>
+
+      <!-- Feature Grid -->
+      <div class="mt-32 sm:mt-40">
+        <div class="gap-8 grid grid-cols-1 md:grid-cols-3">
+          <motion.div
+            v-for="(feature, index) in features"
+            :key="feature.title"
+            :initial="{ opacity: 0, y: 50 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.6, delay: 0.8 + index * 0.1 }"
+            class="group p-8 border border-slate-200 rounded-3xl bg-white/50 transition-all relative overflow-hidden dark:border-slate-800 hover:border-indigo-200 dark:bg-slate-900/50 hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:border-indigo-500/30"
+          >
+            <div
+              :class="feature.color"
+              class="mb-6 rounded-2xl flex h-12 w-12 shadow-indigo-500/20 shadow-lg items-center justify-center bg-gradient-to-br"
+            >
+              <div :class="feature.icon" class="text-white h-6 w-6" />
+            </div>
+            <h3 class="text-xl text-slate-900 font-bold dark:text-white">
+              {{ feature.title }}
+            </h3>
+            <p class="text-slate-600 leading-7 mt-4 dark:text-slate-400">
+              {{ feature.description }}
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Decorative Footer Shape -->
+    <div class="h-32 bottom-0 left-0 right-0 absolute from-slate-50 to-transparent bg-gradient-to-t dark:from-slate-900/50" />
   </div>
 </template>
+
+<style scoped>
+/* Custom animations or refinements if needed */
+</style>

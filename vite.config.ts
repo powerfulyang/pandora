@@ -1,5 +1,7 @@
+import type { UserConfig } from 'vite'
+import type { ViteSSGOptions } from 'vite-ssg'
 import process from 'node:process'
-import legacy from '@vitejs/plugin-legacy'
+/// <reference types="vite-ssg" />
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
@@ -10,8 +12,14 @@ import Components from 'unplugin-vue-components/vite'
 import { VueRouterAutoImports } from 'unplugin-vue-router'
 import VueRouter from 'unplugin-vue-router/vite'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+import Layouts from 'vite-plugin-vue-layouts'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import AutoIconServerPlugin from './plugins/icon'
+
+interface Configuration extends UserConfig {
+  ssgOptions?: ViteSSGOptions
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -39,9 +47,34 @@ export default defineConfig({
   server: {
     host: true,
   },
+  ssgOptions: {
+    script: 'async',
+    formatting: 'minify',
+  },
   plugins: [
-    legacy({
-      targets: ['defaults', 'not IE 11'],
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Vue Starter Template',
+        short_name: 'VueApp',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+      },
     }),
     AutoIconServerPlugin(),
     codeInspectorPlugin({
@@ -51,8 +84,6 @@ export default defineConfig({
       projects: ['./tsconfig.app.json'],
       loose: true,
     }),
-    vue(),
-    vueJsx(),
     VueRouter({
       root: '.',
       // Add your own custom pages here. Just add it to the array. Example: 'src/welcome/pages'
@@ -66,6 +97,12 @@ export default defineConfig({
       extensions: ['.vue'],
       exclude: ['**/components/**'],
     }),
+    Layouts({
+      layoutsDirs: 'src/layouts',
+      defaultLayout: 'default',
+    }),
+    vue(),
+    vueJsx(),
     UnoCSS(),
     Components({
       dirs: [
@@ -91,4 +128,4 @@ export default defineConfig({
       ],
     }),
   ],
-})
+}) as Configuration

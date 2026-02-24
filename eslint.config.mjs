@@ -30,6 +30,7 @@ export default antfu(
       'antfu/no-top-level-await': 'off',
       'eslint-comments/no-unlimited-disable': 'off',
       'no-console': 'off',
+      'unicorn/prefer-number-properties': 'off',
     },
   },
 )

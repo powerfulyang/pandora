@@ -7,12 +7,9 @@ export default defineConfig({
       target: 'src/orval/service.ts',
       schemas: 'src/orval/models',
       client: 'vue-query',
-      httpClient: 'fetch',
+      httpClient: 'axios',
       clean: true,
       override: {
-        fetch: {
-          includeHttpResponseReturnType: false,
-        },
         mutator: {
           path: './src/http-client/index.ts',
           name: 'request',
@@ -29,19 +26,19 @@ export default defineConfig({
           // 加上 verb, 且首字母大写
           return `${verb}${operationName.charAt(0).toUpperCase()}${camelCase.slice(1)}`
         },
+        header: () => {
+          return `// @ts-nocheck\n`
+        },
       },
     },
     input: {
-      target: 'https://subtitle.us4ever.com/openapi.json',
+      target: 'https://api.littleeleven.com/api/doc',
       // 如果是旧版本的 swagger，需要开启 patch 和 warnOnly
       // openapi 3.0 不需要开启
       // converterOptions: {
       //   patch: true,
       //   warnOnly: true,
       // },
-    },
-    hooks: {
-      afterAllFilesWrite: 'node patch-orval.mjs',
     },
   },
 })
