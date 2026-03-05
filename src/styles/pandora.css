@@ -202,6 +202,15 @@ body {
   line-height: 1.7 !important;
 }
 
+.vjs-tree-node.is-highlight,
+.vjs-tree-node:hover {
+  background-color: var(--pd-accent-subtle) !important;
+}
+
+.vjs-tree-node .vjs-tree-node-actions {
+  background-color: var(--pd-bg-elevated) !important;
+}
+
 .vjs-tree .vjs-key {
   color: var(--pd-accent) !important;
 }

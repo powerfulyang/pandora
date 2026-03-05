@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Braces, Crop, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Crop, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -32,6 +32,15 @@ const tools = [
     href: '/image-converter',
     status: 'ONLINE',
     stats: ['Batch Mode', 'History Log'],
+  },
+  {
+    id: 'data-parser',
+    title: 'Data Parser',
+    icon: Binary,
+    desc: 'Extract JSON and generate TS types from Excel/CSV files.',
+    href: '/data-parser',
+    status: 'ONLINE',
+    stats: ['Excel / CSV', 'TS Type Gen'],
   },
 ]
 

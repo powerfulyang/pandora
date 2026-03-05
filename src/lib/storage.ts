@@ -1,6 +1,6 @@
 import localforage from 'localforage'
 
-// Configure localforage
+// Configure localforage for image processing
 localforage.config({
   name: 'PandoraApp',
   storeName: 'image_processing_records',
@@ -37,5 +37,55 @@ export const recordStorage = {
 
   async deleteRecord(id: string) {
     await localforage.removeItem(id)
+  },
+}
+
+// --- Data Parser Storage ---
+const dataParserStore = localforage.createInstance({
+  name: 'PandoraApp',
+  storeName: 'data_parser',
+  description: 'Stores data parser state (parsed data, editor content)',
+})
+
+export interface DataParserState {
+  json: any[] | Record<string, any[]>
+  types: string
+  fileName: string
+  fileType: 'excel' | 'csv'
+  isMultiSheet?: boolean
+  sheetNames?: string[]
+}
+
+const DATA_KEY = 'dp_parsed_data'
+const EDITOR_KEY = 'dp_editor_content'
+const EXTRA_LIB_KEY = 'dp_extra_lib'
+
+export const dataParserStorage = {
+  async saveData(state: DataParserState) {
+    await dataParserStore.setItem(DATA_KEY, state)
+  },
+
+  async loadData(): Promise<DataParserState | null> {
+    return dataParserStore.getItem<DataParserState>(DATA_KEY)
+  },
+
+  async saveEditorContent(content: string) {
+    await dataParserStore.setItem(EDITOR_KEY, content)
+  },
+
+  async loadEditorContent(): Promise<string | null> {
+    return dataParserStore.getItem<string>(EDITOR_KEY)
+  },
+
+  async saveExtraLib(lib: string) {
+    await dataParserStore.setItem(EXTRA_LIB_KEY, lib)
+  },
+
+  async loadExtraLib(): Promise<string | null> {
+    return dataParserStore.getItem<string>(EXTRA_LIB_KEY)
+  },
+
+  async clear() {
+    await dataParserStore.clear()
   },
 }
