@@ -60,6 +60,15 @@ const tools = [
     status: 'ONLINE',
     stats: ['Regex / Diff', 'Color / Time'],
   },
+  {
+    id: 'markdown-editor',
+    title: 'Markdown Editor',
+    icon: Code2,
+    desc: 'Full-featured Markdown parser with Flowchart, Math Formulas, and Syntax Highlighting.',
+    href: '/markdown-editor',
+    status: 'ONLINE',
+    stats: ['Katex / Mermaid', 'Highlight'],
+  },
 ]
 
 const containerVariants = {
