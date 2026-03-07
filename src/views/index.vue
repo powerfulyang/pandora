@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Binary, Braces, Crop, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileKey, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -41,6 +41,24 @@ const tools = [
     href: '/data-parser',
     status: 'ONLINE',
     stats: ['Excel / CSV', 'TS Type Gen'],
+  },
+  {
+    id: 'text-codec',
+    title: 'Text Codec',
+    icon: FileKey,
+    desc: 'Base64, URL, Hash, JWT, Unicode — all-in-one encode & decode.',
+    href: '/text-codec',
+    status: 'ONLINE',
+    stats: ['Base64 / URL', 'Hash / JWT'],
+  },
+  {
+    id: 'dev-toolkit',
+    title: 'Dev Toolkit',
+    icon: Code2,
+    desc: 'Regex tester, timestamp converter, color picker & text diff.',
+    href: '/dev-toolkit',
+    status: 'ONLINE',
+    stats: ['Regex / Diff', 'Color / Time'],
   },
 ]
 
