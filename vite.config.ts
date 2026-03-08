@@ -12,7 +12,7 @@ import { VueRouterAutoImports } from 'unplugin-vue-router'
 import VueRouter from 'unplugin-vue-router/vite'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import topLevelAwait from 'vite-plugin-top-level-await'
+
 import Layouts from 'vite-plugin-vue-layouts'
 import wasm from 'vite-plugin-wasm'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -28,9 +28,44 @@ export default defineConfig({
   //
   assetsInclude: ['**/*.wasm'],
   build: {
+    target: 'esnext',
+    cssCodeSplit: false,
     rollupOptions: {
-      //
-      external: [],
+      output: {
+        experimentalMinChunkSize: 20_000, // merge chunks smaller than 20KB
+        manualChunks(id) {
+          // Monaco editor workers are kept separate (loaded as web workers)
+          if (id.includes('monaco-editor') && id.includes('.worker'))
+            return undefined
+
+          // Monaco editor core + all languages → single chunk
+          if (id.includes('monaco-editor') && !id.includes('.worker'))
+            return 'vendor-monaco'
+
+          // Lucide icons → single chunk
+          if (id.includes('lucide-vue-next'))
+            return 'vendor-icons'
+
+          // JSquash WASM codecs → single chunk
+          if (id.includes('@jsquash'))
+            return 'vendor-jsquash'
+
+          // Shiki languages & themes → single chunk
+          if (id.includes('shiki') || id.includes('@shikijs'))
+            return 'vendor-shiki'
+
+          // Vue ecosystem → single chunk
+          if (id.includes('node_modules') && (
+            id.includes('/vue/')
+            || id.includes('/vue-router/')
+            || id.includes('/@vue/')
+            || id.includes('/pinia/')
+            || id.includes('/@vueuse/')
+          )) {
+            return 'vendor-vue'
+          }
+        },
+      },
     },
     sourcemap: process.env.NODE_ENV !== 'production',
   },
@@ -57,7 +92,7 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [wasm(), topLevelAwait()],
+    plugins: () => [wasm()],
     rollupOptions: {
       output: {},
     },
@@ -94,9 +129,9 @@ export default defineConfig({
       },
     }),
     AutoIconServerPlugin(),
-    codeInspectorPlugin({
-      bundler: 'vite',
-    }),
+    ...(process.env.NODE_ENV !== 'production'
+      ? [codeInspectorPlugin({ bundler: 'vite' })]
+      : []),
     tsconfigPaths({
       projects: ['./tsconfig.app.json'],
       loose: true,
@@ -119,7 +154,6 @@ export default defineConfig({
       defaultLayout: 'default',
     }),
     wasm(),
-    topLevelAwait(),
     vue(),
     vueJsx(),
     UnoCSS(),

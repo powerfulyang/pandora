@@ -66,7 +66,8 @@ onMounted(async () => {
   if (typeof window === 'undefined')
     return
 
-  const monaco = await import('monaco-editor')
+  // @ts-expect-error - editor.api doesn't have a specific type declaration
+  const monaco = (await import('monaco-editor/esm/vs/editor/editor.api')) as typeof MonacoType
   // Register basic languages and language services for Monaco
   // @ts-expect-error - contribution files don't have types
   await import('monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution')
@@ -91,7 +92,7 @@ onMounted(async () => {
       ...props.options,
     })
 
-    editor.onDidChangeModelContent(() => {
+    editor?.onDidChangeModelContent(() => {
       const value = editor?.getValue() || ''
       emit('update:modelValue', value)
     })
@@ -100,7 +101,7 @@ onMounted(async () => {
     if (props.autoScroll) {
       scrollToBottom()
     }
-    emit('mount', editor, monaco)
+    emit('mount', editor!, monaco)
   }
 })
 
