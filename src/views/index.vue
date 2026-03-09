@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileKey, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileKey, PenTool, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -60,7 +60,15 @@ const tools = [
     status: 'ONLINE',
     stats: ['Regex / Diff', 'Color / Time'],
   },
-
+  {
+    id: 'svg-editor',
+    title: 'SVG Editor',
+    icon: PenTool,
+    desc: 'Interactive SVG vector graphics editor & live code synchronizer.',
+    href: '/svg-editor',
+    status: 'ONLINE',
+    stats: ['Fabric.js', 'Vector Sync'],
+  },
 ]
 
 const containerVariants = {

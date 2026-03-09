@@ -31,6 +31,7 @@
     "dayjs": "^1.11.19",
     "esbuild-wasm": "^0.27.3",
     "exceljs": "^4.4.0",
+    "fabric": "7.2.0",
     "js-md5": "^0.8.3",
     "localforage": "^1.10.0",
     "lodash-es": "^4.17.23",
