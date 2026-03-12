@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileKey, PenTool, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, PenTool, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -68,6 +68,15 @@ const tools = [
     href: '/svg-editor',
     status: 'ONLINE',
     stats: ['Fabric.js', 'Vector Sync'],
+  },
+  {
+    id: 'pdf-to-image',
+    title: 'PDF to Image',
+    icon: FileImage,
+    desc: 'Convert PDF pages into high-quality images (PNG/JPG).',
+    href: '/pdf-to-image',
+    status: 'ONLINE',
+    stats: ['Multi-page', 'Zip Export'],
   },
 ]
 

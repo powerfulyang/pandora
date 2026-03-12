@@ -14,8 +14,10 @@ export interface ProcessingRecord {
   format: string
   originalSize: number
   processedSize: number
-  quality: number
-  savedFile?: Blob
+  quality?: number
+  scale?: number
+  savedFile?: Blob // For PDF "Merge Long", this is the merged image. For multi-page, we might just store the zip? Or the first page?
+  pagesCount?: number
 }
 
 export const recordStorage = {
@@ -37,6 +39,35 @@ export const recordStorage = {
 
   async deleteRecord(id: string) {
     await localforage.removeItem(id)
+  },
+}
+
+// --- PDF Processing Storage ---
+const pdfRecordStore = localforage.createInstance({
+  name: 'PandoraApp',
+  storeName: 'pdf_processing_records',
+  description: 'Stores records of PDF to image conversions',
+})
+
+export const pdfRecordStorage = {
+  async saveRecord(record: ProcessingRecord) {
+    await pdfRecordStore.setItem(record.id, record)
+  },
+
+  async getRecords(): Promise<ProcessingRecord[]> {
+    const records: ProcessingRecord[] = []
+    await pdfRecordStore.iterate((value) => {
+      records.push(value as ProcessingRecord)
+    })
+    return records.sort((a, b) => b.timestamp - a.timestamp)
+  },
+
+  async clearRecords() {
+    await pdfRecordStore.clear()
+  },
+
+  async deleteRecord(id: string) {
+    await pdfRecordStore.removeItem(id)
   },
 }
 
