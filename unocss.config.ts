@@ -51,7 +51,6 @@ export default defineConfig(
       },
       fontFamily: {
         sans: '\'JetBrains Mono\', ui-monospace, \'Cascadia Code\', \'Fira Code\', monospace',
-        display: '\'Outfit\', ui-sans-serif, system-ui, sans-serif',
       },
     },
     shortcuts: [

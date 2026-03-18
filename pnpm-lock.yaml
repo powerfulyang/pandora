@@ -29,6 +29,9 @@ importers:
       '@types/jszip':
         specifier: ^3.4.1
         version: 3.4.1
+      '@types/marked':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@unocss/reset':
         specifier: ^66.6.0
         version: 66.6.0
@@ -74,6 +77,9 @@ importers:
       lucide-vue-next:
         specifier: ^0.575.0
         version: 0.575.0(vue@3.5.29(typescript@5.9.3))
+      marked:
+        specifier: ^17.0.4
+        version: 17.0.4
       monaco-editor:
         specifier: ^0.55.1
         version: 0.55.1
@@ -2194,6 +2200,10 @@ packages:
 
   '@types/lodash@4.17.13':
     resolution: {integrity: sha512-lfx+dftrEZcdBPczf9d0Qv0x+j/rfNCMuC6OcfXmO8gkfeNAY88PgKUbvG56whcN23gc27yenwF6oJZXGFpYxg==}
+
+  '@types/marked@6.0.0':
+    resolution: {integrity: sha512-jmjpa4BwUsmhxcfsgUit/7A9KbrC48Q0q8KvnY107ogcjGgTFDlIL3RpihNpx2Mu1hM4mdFQjoVc4O6JoGKHsA==}
+    deprecated: This is a stub types definition. marked provides its own type definitions, so you do not need this installed.
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -4647,6 +4657,11 @@ packages:
   marked@14.0.0:
     resolution: {integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==}
     engines: {node: '>= 18'}
+    hasBin: true
+
+  marked@17.0.4:
+    resolution: {integrity: sha512-NOmVMM+KAokHMvjWmC5N/ZOvgmSWuqJB8FoYI019j4ogb/PeRMKoKIjReZ2w3376kkA8dSJIP8uD993Kxc0iRQ==}
+    engines: {node: '>= 20'}
     hasBin: true
 
   math-intrinsics@1.1.0:
@@ -8777,6 +8792,10 @@ snapshots:
 
   '@types/lodash@4.17.13': {}
 
+  '@types/marked@6.0.0':
+    dependencies:
+      marked: 17.0.4
+
   '@types/mdast@4.0.4':
     dependencies:
       '@types/unist': 3.0.3
@@ -11698,6 +11717,8 @@ snapshots:
   markdown-table@3.0.4: {}
 
   marked@14.0.0: {}
+
+  marked@17.0.4: {}
 
   math-intrinsics@1.1.0: {}
 
