@@ -143,3 +143,70 @@ export const markdownPdfStorage = {
     await markdownPdfStore.clear()
   },
 }
+
+// --- Resume Builder Storage ---
+const resumeBuilderStore = localforage.createInstance({
+  name: 'PandoraApp',
+  storeName: 'resume_builder',
+  description: 'Stores resume builder data',
+})
+
+const RESUME_DATA_KEY = 'resume_data'
+
+export interface ResumeSkillItem {
+  category: string
+  skills: string
+}
+
+export interface ResumeExperience {
+  id: string
+  title: string
+  company: string
+  period: string
+  highlights: string[]
+}
+
+export interface ResumeProject {
+  id: string
+  name: string
+  period: string
+  description: string
+  highlights: string[]
+}
+
+export interface ResumeEducation {
+  id: string
+  school: string
+  degree: string
+  period: string
+  highlights: string[]
+}
+
+export interface ResumeData {
+  name: string
+  title: string
+  location: string
+  email: string
+  phone: string
+  website: string
+  github: string
+  summary: string
+  experiences: ResumeExperience[]
+  projects: ResumeProject[]
+  skills: ResumeSkillItem[]
+  education: ResumeEducation[]
+}
+
+export const resumeBuilderStorage = {
+  async saveData(data: ResumeData) {
+    await resumeBuilderStore.setItem(RESUME_DATA_KEY, data)
+  },
+
+  async loadData(): Promise<ResumeData | null> {
+    return resumeBuilderStore.getItem<ResumeData>(RESUME_DATA_KEY)
+  },
+
+  async clear() {
+    await resumeBuilderStore.clear()
+  },
+}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, FileText, PenTool, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, FileText, Pencil, PenTool, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -86,6 +86,15 @@ const tools = [
     href: '/markdown-pdf',
     status: 'ONLINE',
     stats: ['Resume Style', 'Print Export'],
+  },
+  {
+    id: 'resume-builder',
+    title: 'Resume Builder',
+    icon: Pencil,
+    desc: 'Build your professional resume with live preview and export to PDF.',
+    href: '/resume-builder',
+    status: 'ONLINE',
+    stats: ['Form Editor', 'PDF Export'],
   },
 ]
 
