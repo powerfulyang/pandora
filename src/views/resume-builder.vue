@@ -1,18 +1,27 @@
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core'
 import {
   ArrowLeft,
   Check,
+  Cloud,
+  CloudOff,
   Eraser,
+  ExternalLink,
   Layers,
+  Loader2,
   Pencil,
   Printer,
+  RefreshCw,
   Sparkles,
+  Wand2,
 } from 'lucide-vue-next'
 import { marked } from 'marked'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { request } from '@/http-client'
 
 const STORAGE_KEY = 'resume-builder-markdown-v1'
+const RECORD_ID_KEY = 'resume-builder-record-id'
 
 const DEFAULT_MARKDOWN = `# 张三
 
@@ -162,17 +171,119 @@ function handlePrint() {
   }, 100)
 }
 
-onMounted(() => {
-  const cached = localStorage.getItem(STORAGE_KEY)
-  markdownInput.value = cached ?? DEFAULT_MARKDOWN
+// ── Cloud Sync Logic ──────────────────────────────────────────
+const recordId = ref('')
+const syncBaseUrl = ref('https://api.littleeleven.com/api/records')
+const isSyncing = ref(false)
+const syncError = ref('')
+const showSyncSettings = ref(false)
+
+const RECORD_BASE_URL_KEY = 'resume-builder-base-url'
+
+async function fetchCloudData() {
+  if (!recordId.value)
+    return
+  isSyncing.value = true
+  syncError.value = ''
+  try {
+    const url = syncBaseUrl.value.endsWith('/') ? syncBaseUrl.value : `${syncBaseUrl.value}/`
+    const res = await request<{ data?: { markdown?: string } }>(
+      `${url}${recordId.value}`,
+      { method: 'GET', notifyErrorMessage: false },
+    )
+    if (res?.data?.markdown) {
+      markdownInput.value = res.data.markdown
+    }
+  }
+  catch (e: any) {
+    syncError.value = `Fetch failed: ${e.message}`
+    console.error('Fetch error:', e)
+  }
+  finally {
+    isSyncing.value = false
+  }
+}
+
+const debouncedSaveCloud = useDebounceFn(async (val: string) => {
+  if (!recordId.value)
+    return
+  isSyncing.value = true
+  syncError.value = ''
+  try {
+    const url = syncBaseUrl.value.endsWith('/') ? syncBaseUrl.value : `${syncBaseUrl.value}/`
+    await request(`${url}${recordId.value}`, {
+      method: 'POST',
+      data: { data: { markdown: val } },
+      notifyErrorMessage: false,
+    })
+    saved.value = true
+    setTimeout(() => {
+      saved.value = false
+    }, 1200)
+  }
+  catch (e: any) {
+    syncError.value = `Save failed: ${e.message}`
+    console.error('Save error:', e)
+  }
+  finally {
+    isSyncing.value = false
+  }
+}, 1200)
+
+function onRecordIdChange() {
+  localStorage.setItem(RECORD_ID_KEY, recordId.value)
+  if (recordId.value) {
+    fetchCloudData()
+  }
+}
+
+function generateRecordId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    recordId.value = crypto.randomUUID()
+    onRecordIdChange()
+  }
+}
+
+function openFullUrl() {
+  if (!recordId.value)
+    return
+  const url = syncBaseUrl.value.endsWith('/') ? syncBaseUrl.value : `${syncBaseUrl.value}/`
+  window.open(`${url}${recordId.value}`, '_blank')
+}
+
+function onBaseUrlChange() {
+  localStorage.setItem(RECORD_BASE_URL_KEY, syncBaseUrl.value)
+}
+
+onMounted(async () => {
+  const cachedId = localStorage.getItem(RECORD_ID_KEY)
+  const cachedBase = localStorage.getItem(RECORD_BASE_URL_KEY)
+  if (cachedBase) {
+    syncBaseUrl.value = cachedBase
+  }
+  if (cachedId) {
+    recordId.value = cachedId
+    await fetchCloudData()
+  }
+
+  // If cloud fetch didn't happen or didn't set content, load local
+  if (!markdownInput.value) {
+    const cached = localStorage.getItem(STORAGE_KEY)
+    markdownInput.value = cached ?? DEFAULT_MARKDOWN
+  }
 })
 
 watch(markdownInput, (val) => {
   localStorage.setItem(STORAGE_KEY, val)
-  saved.value = true
-  setTimeout(() => {
-    saved.value = false
-  }, 1200)
+  if (recordId.value) {
+    debouncedSaveCloud(val)
+  }
+  else {
+    saved.value = true
+    setTimeout(() => {
+      saved.value = false
+    }, 1200)
+  }
 })
 </script>
 
@@ -202,8 +313,107 @@ watch(markdownInput, (val) => {
         </div>
       </div>
 
-      <div class="text-xs text-pd-text-muted flex gap-3 items-center">
-        <div v-if="hasData" class="gap-2 hidden items-center md:flex">
+      <div class="text-xs text-pd-text-muted flex gap-3 flex-items-center">
+        <!-- Cloud Sync Controls -->
+        <div class="hidden flex-items-center relative md:flex">
+          <button
+            class="text-[10px] text-pd-text-muted tracking-wider px-2.5 py-1.5 border border-pd-border rounded-[2px] bg-pd-bg-subtle/50 flex gap-1.5 cursor-pointer uppercase transition-all flex-items-center hover:text-pd-accent hover:bg-pd-bg-muted"
+            :class="{ 'bg-pd-accent/5 border-pd-accent/20 text-pd-accent': recordId }"
+            title="Cloud Sync Settings"
+            @click="showSyncSettings = !showSyncSettings"
+          >
+            <component :is="recordId ? Cloud : CloudOff" class="h-3 w-3" />
+            <span class="hidden lg:inline">{{ recordId ? 'Synced' : 'Local Only' }}</span>
+            <Loader2 v-if="isSyncing" class="h-3 w-3 animate-spin" />
+          </button>
+
+          <Transition name="fade">
+            <div
+              v-if="showSyncSettings"
+              class="p-5 border border-pd-border rounded-sm bg-pd-bg w-80 shadow-2xl right-0 top-12 absolute z-[60] backdrop-blur-md"
+            >
+              <div class="mb-4 pb-3 border-b border-pd-border flex flex-items-center justify-between">
+                <h4 class="text-[10px] tracking-widest font-bold uppercase">
+                  Cloud Sync Settings
+                </h4>
+                <div v-if="isSyncing" class="flex gap-1.5 flex-items-center">
+                  <Loader2 class="text-pd-accent h-3 w-3 animate-spin" />
+                  <span class="text-[8px] text-pd-accent font-bold uppercase transition-all">Syncing...</span>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-4">
+                <div>
+                  <label class="text-[10px] text-pd-text-muted tracking-wider font-bold mb-1.5 block uppercase">API Base URL</label>
+                  <input
+                    v-model="syncBaseUrl"
+                    type="text"
+                    class="text-xs px-3 py-2 outline-none border border-pd-border rounded-sm bg-pd-bg-inset w-full transition-colors focus:border-pd-accent"
+                    placeholder="https://api.example.com/api/records"
+                    @change="onBaseUrlChange"
+                  >
+                </div>
+
+                <div>
+                  <label class="text-[10px] text-pd-text-muted tracking-wider font-bold mb-1.5 block uppercase">Record ID / UUID</label>
+                  <div class="flex gap-1.5">
+                    <input
+                      v-model="recordId"
+                      type="text"
+                      class="text-xs px-3 py-2 outline-none border border-pd-border rounded-sm bg-pd-bg-inset flex-1 min-w-0 transition-colors focus:border-pd-accent"
+                      placeholder="Enter a UUID to search or sync..."
+                      @change="onRecordIdChange"
+                    >
+                    <button
+                      class="p-2 border border-pd-border rounded-sm shrink-0 transition-colors hover:text-pd-accent hover:bg-pd-bg-muted"
+                      title="Generate Random ID"
+                      @click="generateRecordId"
+                    >
+                      <Wand2 class="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      class="p-2 border border-pd-border rounded-sm shrink-0 transition-colors hover:text-pd-accent hover:bg-pd-bg-muted"
+                      title="Force Refresh"
+                      @click="fetchCloudData"
+                    >
+                      <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': isSyncing }" />
+                    </button>
+                    <button
+                      class="p-2 border border-pd-border rounded-sm shrink-0 transition-colors hover:text-pd-accent hover:bg-pd-bg-muted"
+                      title="Open Record in New Window"
+                      @click="openFullUrl"
+                    >
+                      <ExternalLink class="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div class="p-3 border border-pd-border/50 rounded-sm bg-pd-bg-muted/30">
+                  <p class="text-[10px] text-pd-text-muted leading-relaxed">
+                    Persistence is handled by the anonymous API. Enter any unique ID to synchronize your resume across devices.
+                  </p>
+                </div>
+
+                <div v-if="syncError" class="p-2.5 border border-pd-danger/20 rounded-sm bg-pd-danger/5">
+                  <p class="text-[9px] text-pd-danger leading-normal font-medium">
+                    {{ syncError }}
+                  </p>
+                </div>
+
+                <div class="pt-1 flex gap-2 justify-end">
+                  <button
+                    class="text-[10px] text-pd-text-muted tracking-widest font-bold px-4 py-2 border border-pd-border rounded-sm bg-transparent cursor-pointer uppercase transition-all hover:text-pd-accent hover:bg-pd-bg-muted"
+                    @click="showSyncSettings = false"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
+
+        <div v-if="hasData" class="flex gap-2 hidden flex-items-center md:flex">
           <div class="rounded-full bg-pd-bg-muted h-1.5 w-20 overflow-hidden">
             <div
               class="rounded-full h-full transition-all duration-500"
