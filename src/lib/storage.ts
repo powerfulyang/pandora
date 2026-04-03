@@ -121,29 +121,6 @@ export const dataParserStorage = {
   },
 }
 
-// --- Markdown PDF Storage ---
-const markdownPdfStore = localforage.createInstance({
-  name: 'PandoraApp',
-  storeName: 'markdown_pdf',
-  description: 'Stores markdown content for PDF generation',
-})
-
-const MD_CONTENT_KEY = 'md_pdf_content'
-
-export const markdownPdfStorage = {
-  async saveContent(content: string) {
-    await markdownPdfStore.setItem(MD_CONTENT_KEY, content)
-  },
-
-  async loadContent(): Promise<string | null> {
-    return markdownPdfStore.getItem<string>(MD_CONTENT_KEY)
-  },
-
-  async clear() {
-    await markdownPdfStore.clear()
-  },
-}
-
 // --- Resume Builder Storage ---
 const resumeBuilderStore = localforage.createInstance({
   name: 'PandoraApp',

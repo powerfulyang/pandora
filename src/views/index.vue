@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, FileText, Pencil, PenTool, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, Pencil, PenTool, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -77,15 +77,6 @@ const tools = [
     href: '/pdf-to-image',
     status: 'ONLINE',
     stats: ['Multi-page', 'Zip Export'],
-  },
-  {
-    id: 'markdown-pdf',
-    title: 'Markdown PDF',
-    icon: FileText,
-    desc: 'Write Markdown resume and export as beautifully styled PDF.',
-    href: '/markdown-pdf',
-    status: 'ONLINE',
-    stats: ['Resume Style', 'Print Export'],
   },
   {
     id: 'resume-builder',
