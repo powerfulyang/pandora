@@ -299,16 +299,16 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
 
 <template>
   <div
-    class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-accent selection:bg-pd-accent-muted"
+    class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-accent selection:bg-pd-accent-muted md:h-screen"
   >
     <!-- Header -->
     <header
-      class="px-6 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 shadow-sm items-center top-0 justify-between sticky z-50 backdrop-blur-md"
+      class="px-4 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 shadow-sm items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6"
     >
-      <div class="flex gap-4 items-center">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <router-link to="/" class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent">
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest uppercase">Back</span>
+          <span class="text-xs tracking-widest hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -322,7 +322,7 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
       </div>
 
       <div class="text-xs text-pd-text-muted flex gap-3 items-center">
-        <div class="gap-2 hidden items-center md:flex">
+        <div class="gap-2 hidden items-center lg:flex">
           <span class="text-[10px] text-pd-text-muted tracking-widest font-bold uppercase">Mode</span>
           <span class="text-xs text-pd-accent">MULTI_THREAD_PDF</span>
         </div>
@@ -332,11 +332,11 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
     </header>
 
     <main
-      class="bg-bg-angled p-4 flex-1 gap-6 grid grid-cols-1 min-h-0 overflow-hidden lg:p-8 sm:p-6 lg:gap-8 lg:grid-cols-12"
+      class="bg-bg-angled p-4 flex-1 gap-6 grid grid-cols-1 min-h-0 lg:p-8 sm:p-6 lg:gap-8 lg:grid-cols-12 lg:overflow-hidden"
     >
       <!-- Left Panel -->
-      <section class="custom-scrollbar pr-2 flex flex-col gap-6 overflow-y-auto lg:col-span-4 xl:col-span-3">
-        <div class="space-y-2">
+      <section class="custom-scrollbar pr-2 flex flex-col gap-6 col-span-1 overflow-y-auto lg:col-span-4 xl:col-span-3">
+        <div class="flex flex-col gap-2">
           <h2 class="text-lg text-pd-text tracking-tight font-bold flex gap-2 uppercase items-center">
             PDF Toolkit
           </h2>
@@ -351,8 +351,8 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
             <span class="text-xs tracking-widest font-bold uppercase">Settings</span>
           </div>
 
-          <div class="flex flex-col space-y-4">
-            <div class="flex flex-col space-y-2">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
               <label class="text-xs text-pd-text-muted uppercase">Process Mode</label>
               <div class="flex gap-1">
                 <button
@@ -372,7 +372,7 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
               </div>
             </div>
 
-            <div class="flex flex-col space-y-2">
+            <div class="flex flex-col gap-2">
               <label class="text-xs text-pd-text-muted uppercase">Scale</label>
               <select
                 v-model.number="config.scale"
@@ -390,7 +390,7 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
               </select>
             </div>
 
-            <div class="flex flex-col space-y-2">
+            <div class="flex flex-col gap-2">
               <label class="text-xs text-pd-text-muted uppercase">Format</label>
               <div class="flex gap-2">
                 <button
@@ -453,7 +453,7 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
           <div v-else class="flex flex-col gap-2">
             <div
               v-for="file in pdfFiles" :key="file.id"
-              class="p-3 border border-pd-border rounded-sm bg-pd-bg flex flex-col space-y-2"
+              class="p-3 border border-pd-border rounded-sm bg-pd-bg flex flex-col gap-2"
             >
               <div class="flex items-start justify-between">
                 <div class="min-w-0">
@@ -482,7 +482,7 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
 
       <!-- Right Panel -->
       <section
-        class="border border-pd-border rounded-sm bg-pd-bg/60 flex flex-col min-h-[600px] shadow-2xl overflow-hidden backdrop-blur-sm lg:col-span-8 xl:col-span-9"
+        class="border border-pd-border rounded-sm bg-pd-bg/60 flex flex-col col-span-1 shadow-2xl backdrop-blur-sm lg:col-span-8 xl:col-span-9 lg:min-h-[600px] lg:overflow-hidden"
       >
         <div class="border-b border-pd-border flex relative">
           <button
@@ -533,7 +533,7 @@ const hasFiles = computed(() => pdfFiles.value.length > 0)
             </div>
 
             <div v-else class="flex flex-col gap-10">
-              <div v-for="file in pdfFiles" :key="file.id" class="space-y-4">
+              <div v-for="file in pdfFiles" :key="file.id" class="flex flex-col gap-4">
                 <div class="pb-2 border-b border-pd-border flex items-center justify-between">
                   <div class="flex gap-2 items-center">
                     <FileText class="text-pd-accent h-4 w-4" />

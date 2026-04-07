@@ -9,7 +9,7 @@ import {
   RefreshCw,
   Terminal,
 } from 'lucide-vue-next'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import CodePlayground from '@/components/DataParser/CodePlayground.vue'
 import DataPreview from '@/components/DataParser/DataPreview.vue'
 import FileUploader from '@/components/DataParser/FileUploader.vue'
@@ -93,6 +93,7 @@ async function handleReset() {
 
 // Restore persisted state on mount
 onMounted(async () => {
+  updateViewportMode()
   const savedData = await dataParserStorage.loadData()
   if (savedData) {
     parsedData.value = {
@@ -117,11 +118,13 @@ onMounted(async () => {
 
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('resize', updateViewportMode)
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('resize', updateViewportMode)
   if (editorSaveTimer)
     clearTimeout(editorSaveTimer)
 })
@@ -129,8 +132,24 @@ onUnmounted(() => {
 // Split pane logic
 const leftWidth = ref(40)
 const isDragging = ref(false)
+const isDesktop = ref(false)
+
+const leftPanelStyle = computed(() => (isDesktop.value
+  ? {
+      width: `${leftWidth.value}%`,
+      flex: `0 0 ${leftWidth.value}%`,
+    }
+  : {}))
+const rightPanelStyle = computed(() => (isDesktop.value
+  ? {
+      width: `${100 - leftWidth.value}%`,
+      flex: `0 0 ${100 - leftWidth.value}%`,
+    }
+  : {}))
 
 function onDividerMouseDown(e: MouseEvent) {
+  if (!isDesktop.value)
+    return
   isDragging.value = true
   e.preventDefault()
 }
@@ -149,19 +168,25 @@ function onMouseMove(e: MouseEvent) {
 function onMouseUp() {
   isDragging.value = false
 }
+
+function updateViewportMode() {
+  isDesktop.value = window.innerWidth >= 960
+  if (!isDesktop.value)
+    isDragging.value = false
+}
 </script>
 
 <template>
-  <div class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-bg selection:bg-pd-accent">
+  <div class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-bg selection:bg-pd-accent md:h-screen">
     <!-- Header -->
-    <header class="px-6 border-b border-pd-border bg-pd-bg/80 flex h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md">
-      <div class="flex gap-4 items-center">
+    <header class="px-4 border-b border-pd-border bg-pd-bg/80 flex h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <router-link
           to="/"
           class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent"
         >
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest font-bold uppercase">Back</span>
+          <span class="text-xs tracking-widest font-bold hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -174,7 +199,7 @@ function onMouseUp() {
         </div>
       </div>
 
-      <div class="text-xs text-pd-text-muted flex gap-3 items-center">
+      <div class="text-xs text-pd-text-muted flex shrink-0 gap-2 items-center md:gap-3">
         <!-- Reset Button -->
         <button
           v-if="parsedData"
@@ -190,13 +215,21 @@ function onMouseUp() {
     </header>
 
     <!-- Main Content -->
-    <main id="split-container" class="flex flex-1 overflow-hidden" :class="{ 'select-none': isDragging }">
+    <main
+      id="split-container"
+      class="flex flex-1 min-h-0"
+      :class="[
+        isDesktop ? 'flex-row overflow-hidden' : 'flex-col overflow-y-auto',
+        { 'select-none': isDragging },
+      ]"
+    >
       <!-- Left Panel: Upload & Structure -->
       <div
-        class="border-r border-pd-border bg-pd-bg-subtle/20 flex flex-col min-h-0 min-w-0 overflow-hidden"
-        :style="{ width: `${leftWidth}%` }"
+        class="border-r border-pd-border bg-pd-bg-subtle/20 flex flex-col min-h-[50vh] min-w-0 overflow-hidden"
+        :class="isDesktop ? 'flex-none border-b-0 min-h-0' : 'w-full border-b'"
+        :style="leftPanelStyle"
       >
-        <div class="custom-scrollbar p-6 flex flex-col gap-8 h-full overflow-y-auto">
+        <div class="custom-scrollbar p-4 flex flex-col gap-6 h-full overflow-y-auto md:p-6 md:gap-8">
           <section>
             <h2 class="text-lg text-pd-text tracking-tight font-bold mb-2 uppercase">
               Dataset Input
@@ -212,7 +245,7 @@ function onMouseUp() {
               <h3 class="text-[10px] text-pd-text-muted tracking-[0.2em] font-bold pb-2 border-b border-pd-border uppercase">
                 Extraction Results
               </h3>
-              <div class="gap-3 grid grid-cols-2">
+              <div class="gap-3 grid grid-cols-1 sm:grid-cols-2">
                 <div class="p-4 border border-pd-border rounded-sm bg-pd-bg-subtle/30 flex flex-col gap-2 transition-colors hover:bg-pd-bg-subtle/50">
                   <div class="flex items-center justify-between">
                     <span class="text-[9px] text-pd-text-muted tracking-widest uppercase">Status</span>
@@ -256,6 +289,7 @@ function onMouseUp() {
 
       <!-- Divider -->
       <div
+        v-if="isDesktop"
         class="group bg-pd-border/40 shrink-0 w-1 cursor-col-resize transition-colors relative hover:bg-pd-accent/40"
         @mousedown="onDividerMouseDown"
       >
@@ -263,9 +297,13 @@ function onMouseUp() {
       </div>
 
       <!-- Right Panel: Tabs -->
-      <div class="flex flex-col min-h-0 min-w-0 overflow-hidden" :style="{ width: `${100 - leftWidth}%` }">
+      <div
+        class="flex flex-1 flex-col min-h-[50vh] min-w-0 overflow-hidden"
+        :class="isDesktop ? 'flex-none min-h-0' : 'w-full'"
+        :style="rightPanelStyle"
+      >
         <!-- Toolbar Tabs -->
-        <div class="px-2 border-b border-pd-border bg-pd-bg-subtle/30 flex shrink-0 items-center">
+        <div class="px-2 border-b border-pd-border bg-pd-bg-subtle/30 flex shrink-0 items-center overflow-x-auto">
           <button
             v-for="tab in [
               { id: 'preview', label: 'Preview', icon: Database },
@@ -273,7 +311,7 @@ function onMouseUp() {
               { id: 'editor', label: 'Playground', icon: Terminal },
             ]"
             :key="tab.id"
-            class="text-[10px] tracking-widest font-bold px-5 py-3 flex gap-2 uppercase transition-all items-center relative"
+            class="text-[10px] tracking-widest font-bold px-3 py-3 flex gap-2 whitespace-nowrap uppercase transition-all items-center relative md:px-5"
             :class="[
               activeTab === tab.id ? 'text-pd-accent' : 'text-pd-text-muted hover:text-pd-text disabled:opacity-20 disabled:pointer-events-none',
             ]"
@@ -287,7 +325,7 @@ function onMouseUp() {
         </div>
 
         <!-- Viewport -->
-        <div class="flex-1 relative overflow-hidden">
+        <div class="flex-1 min-h-[360px] relative overflow-hidden" :class="isDesktop ? 'min-h-0' : ''">
           <div v-if="!parsedData" class="bg-pd-bg-subtle/5 flex flex-col items-center inset-0 justify-center absolute">
             <Database class="text-pd-border/50 mb-4 h-16 w-16" :stroke-width="1" />
             <p class="text-[10px] text-pd-text-disabled tracking-[0.4em] uppercase">
@@ -296,7 +334,7 @@ function onMouseUp() {
           </div>
 
           <template v-else>
-            <div v-show="activeTab === 'preview'" class="custom-scrollbar p-8 h-full overflow-auto">
+            <div v-show="activeTab === 'preview'" class="custom-scrollbar p-4 h-full overflow-auto md:p-8">
               <DataPreview
                 :data="parsedData.json"
                 :file-name="parsedData.fileName"
@@ -305,7 +343,7 @@ function onMouseUp() {
                 :sheet-names="parsedData.sheetNames"
               />
             </div>
-            <div v-show="activeTab === 'types'" class="custom-scrollbar p-8 h-full overflow-auto">
+            <div v-show="activeTab === 'types'" class="custom-scrollbar p-4 h-full overflow-auto md:p-8">
               <TypeDisplay :types="parsedData.types" />
             </div>
             <div v-show="activeTab === 'editor'" class="h-full relative overflow-hidden">

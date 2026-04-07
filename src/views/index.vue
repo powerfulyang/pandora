@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, Pencil, PenTool, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, GitBranch, Pencil, PenTool, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -70,6 +70,15 @@ const tools = [
     stats: ['Fabric.js', 'Vector Sync'],
   },
   {
+    id: 'mermaid-editor',
+    title: 'Mermaid Editor',
+    icon: GitBranch,
+    desc: 'Create flowcharts, diagrams & charts from Mermaid syntax with live preview.',
+    href: '/mermaid-editor',
+    status: 'ONLINE',
+    stats: ['Live Preview', 'SVG/PNG'],
+  },
+  {
     id: 'pdf-to-image',
     title: 'PDF to Image',
     icon: FileImage,
@@ -114,13 +123,13 @@ const itemVariants = {
 
 <template>
   <div
-    class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-accent selection:bg-pd-accent-muted"
+    class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-accent selection:bg-pd-accent-muted md:h-screen"
   >
     <!-- Top Navigation Bar -->
     <header
-      class="px-6 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md"
+      class="px-4 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6"
     >
-      <div class="flex gap-4 items-center">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <span class="text-sm tracking-widest font-bold uppercase">
           Pandora<span class="text-pd-text-muted">///OS</span>
         </span>
@@ -157,7 +166,7 @@ const itemVariants = {
           </motion.div>
         </div>
 
-        <div class="text-right flex gap-6 col-span-1 items-end justify-end md:col-span-4">
+        <div class="text-right flex flex-wrap gap-6 col-span-1 items-end justify-end md:col-span-4">
           <div class="flex flex-col">
             <span class="text-[10px] text-pd-text-muted font-bold mb-1 uppercase">
               Local Time
@@ -176,7 +185,7 @@ const itemVariants = {
 
       <!-- Tools Grid -->
       <motion.div
-        class="gap-4 grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 xl:grid-cols-4"
+        class="gap-4 grid grid-cols-1 md:grid-cols-3"
         :initial="containerVariants.hidden"
         :animate="containerVariants.visible"
       >

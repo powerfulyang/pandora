@@ -172,43 +172,49 @@ function clearImage() {
   pendingCoordinates = null
 }
 
-function handleFile(file: File) {
+async function handleFile(file: File) {
   clearImage()
   originalFile.value = file
 
-  const reader = new FileReader()
-  reader.addEventListener('load', () => {
-    const dataUrl = reader.result?.toString() || ''
+  isProcessing.value = true
+  try {
+    const { decodeImage } = await import('@/lib/image-processor')
+    const imageData = await decodeImage(file)
 
-    // Scale large images to prevent performance issues
-    const img = new Image()
-    img.onload = () => {
-      const MAX_SIZE = 2048
-      if (img.width > MAX_SIZE || img.height > MAX_SIZE) {
-        const ratio = Math.max(img.width / MAX_SIZE, img.height / MAX_SIZE)
-        scaleRatio.value = ratio
-
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.round(img.width / ratio)
-        canvas.height = Math.round(img.height / ratio)
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        }
-
-        let mimeType = file.type || 'image/png'
-        if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) {
-          mimeType = 'image/png'
-        }
-        imgSrc.value = canvas.toDataURL(mimeType, 0.95)
-      }
-      else {
-        imgSrc.value = dataUrl
-      }
+    // Create a temporary canvas to generate a data URL for the cropper
+    // We use PNG as the internal format for the cropper preview
+    const canvas = document.createElement('canvas')
+    canvas.width = imageData.width
+    canvas.height = imageData.height
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.putImageData(imageData, 0, 0)
     }
-    img.src = dataUrl
-  })
-  reader.readAsDataURL(file)
+
+    const MAX_SIZE = 2048
+    if (imageData.width > MAX_SIZE || imageData.height > MAX_SIZE) {
+      const ratio = Math.max(imageData.width / MAX_SIZE, imageData.height / MAX_SIZE)
+      scaleRatio.value = ratio
+
+      const scaledCanvas = document.createElement('canvas')
+      scaledCanvas.width = Math.round(imageData.width / ratio)
+      scaledCanvas.height = Math.round(imageData.height / ratio)
+      const scaledCtx = scaledCanvas.getContext('2d')
+      if (scaledCtx) {
+        scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height)
+      }
+      imgSrc.value = scaledCanvas.toDataURL('image/png', 0.95)
+    }
+    else {
+      imgSrc.value = canvas.toDataURL('image/png', 0.95)
+    }
+  }
+  catch (error) {
+    console.error('Failed to load image:', error)
+  }
+  finally {
+    isProcessing.value = false
+  }
 }
 
 // DnD
@@ -217,7 +223,7 @@ function handleDrop(e: DragEvent) {
   const files = e.dataTransfer?.files
   if (files && files.length > 0) {
     const file = files[0]
-    if (file && file.type.startsWith('image/')) {
+    if (file) {
       handleFile(file)
     }
   }
@@ -412,8 +418,6 @@ async function handlePreview() {
   }
   catch (e) {
     console.error('Error during image processing:', e)
-    // eslint-disable-next-line no-alert
-    alert('Failed to process image. Check console for details.')
   }
   finally {
     isProcessing.value = false
@@ -457,18 +461,18 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
 </script>
 
 <template>
-  <div class="text-pd-text bg-pd-bg flex flex-col h-screen relative overflow-hidden">
+  <div class="text-pd-text bg-pd-bg flex flex-col min-h-screen relative md:h-screen">
     <!-- Header -->
     <header
-      class="px-6 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md"
+      class="px-4 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6"
     >
-      <div class="flex gap-4 items-center">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <router-link
           to="/"
           class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent"
         >
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest uppercase">Back</span>
+          <span class="text-xs tracking-widest hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -487,104 +491,101 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
           @click="showHistoryModal = true"
         >
           <History class="h-4 w-4" />
-          <span class="tracking-widest font-bold hidden uppercase md:inline">History</span>
+          <span class="tracking-widest font-bold hidden uppercase lg:inline">History</span>
         </button>
-        <div class="bg-pd-border h-4 w-px" />
-        <div class="gap-2 hidden items-center md:flex">
-          <span class="text-[10px] text-pd-text-muted tracking-widest font-bold uppercase">Mode</span>
-          <span class="text-xs text-pd-accent">WASM_CLIENT</span>
-        </div>
         <div class="mx-2 bg-pd-border h-4 w-px" />
         <ThemeToggle />
       </div>
     </header>
 
-    <div class="flex-1 grid grid-cols-1 min-h-0 overflow-hidden lg:grid-cols-12">
+    <div class="flex-1 grid grid-cols-1 min-h-0 lg:grid-cols-12 lg:overflow-hidden">
       <!-- Sidebar Settings -->
-      <div class="border-r border-pd-border bg-pd-bg-subtle/30 flex flex-col min-h-0 overflow-y-auto lg:col-span-3">
-        <div class="p-5 space-y-8">
+      <div class="border-r border-pd-border bg-pd-bg-subtle/30 flex flex-col col-span-1 min-h-0 overflow-y-auto lg:col-span-4 xl:col-span-3">
+        <div class="p-6 flex flex-col gap-6">
           <!-- Header -->
           <div>
-            <h2 class="text-xs text-pd-text-muted tracking-widest font-bold mb-1 uppercase">
-              // Control Panel
+            <h2 class="text-sm text-pd-text tracking-wide font-semibold mb-3 uppercase">
+              Control Panel
             </h2>
-            <div class="mt-3 bg-pd-border h-px w-full" />
+            <div class="bg-pd-border h-px w-full" />
           </div>
 
           <!-- Export Settings -->
-          <div class="space-y-3">
-            <div class="text-[10px] text-pd-text-muted tracking-widest flex uppercase items-center justify-between">
-              <span>[01] Format</span>
-            </div>
-            <div class="p-px rounded-[2px] bg-pd-border gap-px grid grid-cols-4">
+          <div class="flex flex-col gap-4">
+            <h3 class="text-xs text-pd-text-muted tracking-wide font-semibold uppercase">
+              Output Format
+            </h3>
+            <div class="p-2 border border-pd-border rounded-sm bg-pd-bg gap-2 grid grid-cols-5">
               <button
-                v-for="f in (['webp', 'avif', 'jpeg', 'png'] as const)"
+                v-for="f in (['webp', 'avif', 'jpeg', 'png', 'heic'] as const)"
                 :key="f"
-                class="text-[10px] font-bold py-1.5 text-center cursor-pointer uppercase transition-all"
+                class="text-xs font-medium py-2 text-center rounded-sm cursor-pointer transition-all"
                 :class="[
                   format === f
-                    ? 'bg-pd-text text-pd-bg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]'
-                    : 'bg-pd-bg hover:bg-pd-surface text-pd-text-muted',
+                    ? 'bg-pd-accent text-white'
+                    : 'hover:bg-pd-bg-subtle text-pd-text-muted',
                 ]"
                 @click="format = f"
               >
-                {{ f }}
+                {{ f.toUpperCase() }}
               </button>
             </div>
 
-            <div v-if="format !== 'png'" class="pt-2 space-y-2">
-              <div class="text-[10px] text-pd-text-muted flex uppercase justify-between">
+            <div v-if="format !== 'png'" class="flex flex-col gap-3">
+              <div class="text-xs text-pd-text-muted flex justify-between">
                 <span>Quality</span>
-                <span class="text-pd-accent">{{ quality }}%</span>
+                <span class="text-pd-accent font-semibold">{{ quality }}%</span>
               </div>
               <input
                 v-model.number="quality"
                 type="range"
                 min="1"
                 max="100"
-                class="appearance-none accent-[var(--pd-accent)] rounded-none bg-pd-border h-1 w-full cursor-pointer"
+                class="appearance-none accent-[var(--pd-accent)] rounded-sm bg-pd-border h-2 w-full cursor-pointer"
               >
             </div>
           </div>
 
           <!-- Aspect Ratio -->
-          <div class="space-y-3">
-            <div class="text-[10px] text-pd-text-muted tracking-widest flex uppercase items-center justify-between">
-              <span>[02] Aspect Ratio</span>
+          <div class="flex flex-col gap-4">
+            <div class="text-xs text-pd-text-muted tracking-wide flex uppercase items-center justify-between">
+              <h3 class="font-semibold">
+                Aspect Ratio
+              </h3>
               <button
                 v-if="aspect !== undefined"
-                class="text-[9px] text-pd-accent cursor-pointer transition-colors hover:text-pd-text"
+                class="text-xs text-pd-accent font-medium cursor-pointer transition-colors hover:text-pd-text"
                 @click="selectAspect(undefined)"
               >
-                RESET
+                Reset
               </button>
             </div>
 
-            <div class="mb-2 p-px rounded-[2px] bg-pd-border gap-px grid grid-cols-4">
+            <div class="p-2 border border-pd-border rounded-sm bg-pd-bg gap-2 grid grid-cols-4">
               <button
-                class="text-[10px] font-bold py-1.5 text-center cursor-pointer uppercase transition-all"
-                :class="[!aspect && !isCustom ? 'bg-pd-text text-pd-bg' : 'bg-pd-bg hover:bg-pd-surface text-pd-text-muted']"
+                class="text-xs font-medium py-2 text-center rounded-sm cursor-pointer transition-all"
+                :class="[!aspect && !isCustom ? 'bg-pd-accent text-white' : 'hover:bg-pd-bg-subtle text-pd-text-muted']"
                 @click="selectAspect(undefined)"
               >
                 Free
               </button>
               <button
-                class="text-[10px] font-bold py-1.5 text-center cursor-pointer uppercase transition-all"
-                :class="[aspect !== undefined && presetGroup === 'common' && !isCustom ? 'bg-pd-text text-pd-bg' : 'bg-pd-bg hover:bg-pd-surface text-pd-text-muted']"
+                class="text-xs font-medium py-2 text-center rounded-sm cursor-pointer transition-all"
+                :class="[aspect !== undefined && presetGroup === 'common' && !isCustom ? 'bg-pd-accent text-white' : 'hover:bg-pd-bg-subtle text-pd-text-muted']"
                 @click="presetGroup = 'common'; selectAspect(1)"
               >
                 Ratio
               </button>
               <button
-                class="text-[10px] font-bold py-1.5 text-center cursor-pointer uppercase transition-all"
-                :class="[aspect !== undefined && presetGroup === 'store' && !isCustom ? 'bg-pd-text text-pd-bg' : 'bg-pd-bg hover:bg-pd-surface text-pd-text-muted']"
+                class="text-xs font-medium py-2 text-center rounded-sm cursor-pointer transition-all"
+                :class="[aspect !== undefined && presetGroup === 'store' && !isCustom ? 'bg-pd-accent text-white' : 'hover:bg-pd-bg-subtle text-pd-text-muted']"
                 @click="presetGroup = 'store'; isCustom = false; applySizePreset(128, 128)"
               >
                 Store
               </button>
               <button
-                class="text-[10px] font-bold py-1.5 text-center cursor-pointer uppercase transition-all"
-                :class="[isCustom ? 'bg-pd-text text-pd-bg' : 'bg-pd-bg hover:bg-pd-surface text-pd-text-muted']"
+                class="text-xs font-medium py-2 text-center rounded-sm cursor-pointer transition-all"
+                :class="[isCustom ? 'bg-pd-accent text-white' : 'hover:bg-pd-bg-subtle text-pd-text-muted']"
                 @click="isCustom = true; presetGroup = 'common'; parseCustomAspect(customAspectInput)"
               >
                 Custom
@@ -592,19 +593,19 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
             </div>
 
             <!-- Presets based on group -->
-            <div v-if="!isCustom && aspect !== undefined && presetGroup === 'common'" class="gap-1 grid grid-cols-5">
+            <div v-if="!isCustom && aspect !== undefined && presetGroup === 'common'" class="gap-2 grid grid-cols-5">
               <button
                 v-for="opt in [{ l: '1:1', v: 1 }, { l: '4:3', v: 4 / 3 }, { l: '16:9', v: 16 / 9 }, { l: '3:2', v: 3 / 2 }, { l: '2:3', v: 2 / 3 }]"
                 :key="opt.l"
-                class="text-[10px] py-1 border rounded-[2px] cursor-pointer transition-colors"
-                :class="[aspect === opt.v ? 'border-transparent bg-pd-text text-pd-bg' : 'border-pd-border text-pd-text-muted hover:text-pd-text hover:border-pd-border-hover']"
+                class="text-xs font-medium py-2 border rounded-sm cursor-pointer transition-colors"
+                :class="[aspect === opt.v ? 'border-pd-accent bg-pd-accent-muted text-pd-accent' : 'border-pd-border text-pd-text-muted hover:text-pd-text hover:border-pd-border-hover']"
                 @click="selectAspect(opt.v)"
               >
                 {{ opt.l }}
               </button>
             </div>
 
-            <div v-if="!isCustom && aspect !== undefined && presetGroup === 'store'" class="flex flex-col gap-1">
+            <div v-if="!isCustom && aspect !== undefined && presetGroup === 'store'" class="flex flex-col gap-2">
               <button
                 v-for="opt in [
                   { label: 'CWS Icon', w: 128, h: 128 },
@@ -614,16 +615,16 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
                   { label: 'Screenshot', w: 1280, h: 800 },
                 ]"
                 :key="opt.label"
-                class="text-[10px] px-2 py-1.5 border rounded-[2px] flex cursor-pointer transition-colors items-center justify-between"
+                class="text-xs font-medium px-3 py-2.5 border rounded-sm flex cursor-pointer transition-colors items-center justify-between"
                 :class="[
                   outputWidth === opt.w.toString() && outputHeight === opt.h.toString()
-                    ? 'border-transparent bg-pd-text text-pd-bg'
-                    : 'border-pd-border text-pd-text-muted hover:text-pd-text hover:border-pd-text-muted',
+                    ? 'border-pd-accent bg-pd-accent-muted text-pd-accent'
+                    : 'border-pd-border text-pd-text-muted hover:text-pd-text hover:border-pd-border-hover',
                 ]"
                 @click="applySizePreset(opt.w, opt.h)"
               >
                 <span>{{ opt.label }}</span>
-                <span class="opacity-50">{{ opt.w }}x{{ opt.h }}</span>
+                <span class="text-xs text-pd-text-disabled">{{ opt.w }}×{{ opt.h }}</span>
               </button>
             </div>
 
@@ -631,56 +632,58 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
               <input
                 v-model="customAspectInput"
                 type="text"
-                class="text-xs text-pd-text px-2 py-1.5 border border-pd-border rounded-[2px] bg-pd-bg w-full transition-colors focus:outline-none focus:border-pd-accent"
-                placeholder="RATIO (16:9)"
+                class="text-sm text-pd-text px-3 py-2 border border-pd-border rounded-sm bg-pd-bg w-full transition-colors focus:outline-none focus:border-pd-accent"
+                placeholder="Ratio (e.g. 16:9)"
                 @input="parseCustomAspect(customAspectInput)"
                 @blur="() => { const f = parseCustomAspect(customAspectInput); if (f) customAspectInput = f }"
               >
             </div>
           </div>
 
-          <!-- Geometry & Scaling -->
-          <div class="space-y-3">
-            <div class="text-[10px] text-pd-text-muted tracking-widest flex uppercase items-center justify-between">
-              <span>[03] Dimensions</span>
+          <!-- Dimensions -->
+          <div class="flex flex-col gap-4">
+            <div class="text-xs text-pd-text-muted tracking-wide flex uppercase items-center justify-between">
+              <h3 class="font-semibold">
+                Dimensions
+              </h3>
               <button
-                class="text-[9px] text-pd-accent flex gap-1 cursor-pointer transition-colors items-center hover:text-pd-text"
+                class="text-xs text-pd-accent font-medium flex gap-1.5 cursor-pointer transition-colors items-center hover:text-pd-text"
                 @click="resetOutputSize"
               >
-                <RefreshCw class="h-3 w-3" /> RESET TARGET
+                <RefreshCw class="h-3.5 w-3.5" /> Reset
               </button>
             </div>
 
-            <div class="border border-pd-border rounded-[2px] bg-pd-bg flex flex-col overflow-hidden">
+            <div class="border border-pd-border rounded-sm bg-pd-bg flex flex-col overflow-hidden">
               <!-- Source Crop -->
               <div class="border-b border-pd-border flex divide-pd-border divide-x">
-                <div class="p-2 bg-pd-bg-subtle/30 flex flex-1 flex-col gap-1">
-                  <span class="text-[9px] text-pd-text-muted uppercase">Crop W</span>
-                  <span class="text-xs text-pd-text">{{ cropWidth || '-' }}</span>
+                <div class="p-3 bg-pd-bg-subtle/30 flex flex-1 flex-col gap-1.5">
+                  <span class="text-xs text-pd-text-muted font-medium uppercase">Crop W</span>
+                  <span class="text-sm text-pd-text font-semibold">{{ cropWidth || '-' }}</span>
                 </div>
-                <div class="p-2 bg-pd-bg-subtle/30 flex flex-1 flex-col gap-1">
-                  <span class="text-[9px] text-pd-text-muted uppercase">Crop H</span>
-                  <span class="text-xs text-pd-text">{{ cropHeight || '-' }}</span>
+                <div class="p-3 bg-pd-bg-subtle/30 flex flex-1 flex-col gap-1.5">
+                  <span class="text-xs text-pd-text-muted font-medium uppercase">Crop H</span>
+                  <span class="text-sm text-pd-text font-semibold">{{ cropHeight || '-' }}</span>
                 </div>
               </div>
               <!-- Output Target -->
               <div class="bg-pd-bg flex divide-pd-border divide-x">
-                <div class="p-2 flex flex-1 flex-col gap-1 transition-colors focus-within:bg-pd-accent/5">
-                  <span class="text-[9px] text-pd-text-muted uppercase">Target W</span>
+                <div class="p-3 flex flex-1 flex-col gap-1.5 transition-colors focus-within:bg-pd-accent/5">
+                  <span class="text-xs text-pd-text-muted font-medium uppercase">Target W</span>
                   <input
                     :value="outputWidth"
                     type="number"
-                    class="text-xs text-pd-accent bg-transparent w-full focus:outline-none"
+                    class="text-sm text-pd-accent font-semibold bg-transparent w-full focus:outline-none"
                     placeholder="Auto"
                     @input="onOutputWidthChange(($event.target as HTMLInputElement).value)"
                   >
                 </div>
-                <div class="p-2 flex flex-1 flex-col gap-1 transition-colors focus-within:bg-pd-accent/5">
-                  <span class="text-[9px] text-pd-text-muted uppercase">Target H</span>
+                <div class="p-3 flex flex-1 flex-col gap-1.5 transition-colors focus-within:bg-pd-accent/5">
+                  <span class="text-xs text-pd-text-muted font-medium uppercase">Target H</span>
                   <input
                     :value="outputHeight"
                     type="number"
-                    class="text-xs text-pd-accent bg-transparent w-full focus:outline-none"
+                    class="text-sm text-pd-accent font-semibold bg-transparent w-full focus:outline-none"
                     placeholder="Auto"
                     @input="onOutputHeightChange(($event.target as HTMLInputElement).value)"
                   >
@@ -691,14 +694,14 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
         </div>
 
         <!-- Action Area -->
-        <div class="mt-auto p-5 border-t border-pd-border bg-pd-bg-subtle/50">
+        <div class="mt-auto p-6 border-t border-pd-border bg-pd-bg-subtle/50">
           <button
             :disabled="!hasCrop || isProcessing"
-            class="group text-xs tracking-widest font-bold py-3.5 rounded-[2px] flex gap-3 w-full cursor-pointer uppercase transition-all items-center justify-center relative overflow-hidden"
+            class="group text-sm tracking-wide font-semibold py-3 rounded-sm flex gap-2 w-full cursor-pointer transition-all items-center justify-center"
             :class="[
               !hasCrop || isProcessing
                 ? 'bg-pd-bg-inset text-pd-text-disabled cursor-not-allowed border border-pd-border'
-                : 'bg-pd-text text-pd-bg hover:bg-pd-accent hover:text-white border border-transparent',
+                : 'bg-pd-accent text-white hover:bg-pd-accent-hover',
             ]"
             @click="handlePreview"
           >
@@ -717,7 +720,7 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
       </div>
 
       <!-- Main Area -->
-      <div class="bg-bg-angled flex flex-col relative overflow-hidden lg:col-span-9">
+      <div class="bg-bg-angled flex flex-col col-span-1 relative lg:col-span-9 lg:overflow-hidden">
         <template v-if="!imgSrc">
           <label
             class="group m-6 border border-pd-border rounded-sm border-dashed flex flex-1 flex-col cursor-pointer transition-all items-center justify-center relative overflow-hidden hover:border-pd-accent/50 hover:bg-pd-accent/5"
@@ -726,7 +729,7 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
           >
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               class="hidden"
               @change="onSelectFile"
             >
@@ -737,7 +740,7 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
             <div class="border-b-2 border-l-2 border-pd-text-muted h-4 w-4 transition-colors bottom-0 left-0 absolute group-hover:border-pd-accent" />
             <div class="border-b-2 border-r-2 border-pd-text-muted h-4 w-4 transition-colors bottom-0 right-0 absolute group-hover:border-pd-accent" />
 
-            <div class="flex flex-col items-center relative z-10 space-y-4">
+            <div class="flex flex-col gap-4 items-center relative z-10">
               <div
                 class="border border-pd-border rounded-full bg-pd-bg-elevated flex h-20 w-20 shadow-xl transition-transform duration-300 items-center justify-center group-hover:scale-110"
               >
@@ -755,7 +758,7 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
               </div>
               <div class="flex gap-2">
                 <span
-                  v-for="type in ['JPG', 'PNG', 'WEBP', 'AVIF']"
+                  v-for="type in ['JPG', 'PNG', 'WEBP', 'AVIF', 'HEIC']"
                   :key="type"
                   class="text-[10px] text-pd-text-disabled font-bold px-2 py-1 border border-pd-border rounded-[1px] bg-pd-surface"
                 >
@@ -955,7 +958,7 @@ const hasCrop = computed(() => !!cropWidth.value && !!cropHeight.value)
             </div>
 
             <!-- Info Bar -->
-            <div class="p-3 space-y-2">
+            <div class="p-3 flex flex-col gap-2">
               <div class="min-w-0">
                 <h4 class="text-xs text-pd-text font-bold mb-0.5 truncate">
                   {{ record.originalName }}

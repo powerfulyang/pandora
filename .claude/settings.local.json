@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(zcf:init-project)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs"
+    ]
+  }
+}

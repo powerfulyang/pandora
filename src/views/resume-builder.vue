@@ -79,8 +79,18 @@ const DEFAULT_MARKDOWN = `# 张三
 // ── Split-pane ────────────────────────────────────────────────
 const leftWidth = ref(42)
 const isDragging = ref(false)
+const isDesktop = ref(false)
+
+const leftPanelStyle = computed(() => (isDesktop.value
+  ? { width: `${leftWidth.value}%`, flex: `0 0 ${leftWidth.value}%` }
+  : {}))
+const rightPanelStyle = computed(() => (isDesktop.value
+  ? { width: `${100 - leftWidth.value}%`, flex: `0 0 ${100 - leftWidth.value}%` }
+  : {}))
 
 function onDividerMouseDown(e: MouseEvent) {
+  if (!isDesktop.value)
+    return
   isDragging.value = true
   e.preventDefault()
 }
@@ -100,14 +110,23 @@ function onMouseUp() {
   isDragging.value = false
 }
 
+function updateViewportMode() {
+  isDesktop.value = window.innerWidth >= 960
+  if (!isDesktop.value)
+    isDragging.value = false
+}
+
 onMounted(() => {
+  updateViewportMode()
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('resize', updateViewportMode)
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('resize', updateViewportMode)
 })
 
 // ── Markdown editor state ─────────────────────────────────────
@@ -289,7 +308,7 @@ watch(markdownInput, (val) => {
 
 <template>
   <div
-    class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-bg selection:bg-pd-accent print:h-auto print:overflow-visible"
+    class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-bg selection:bg-pd-accent md:h-screen print:h-auto print:overflow-visible"
   >
     <header
       class="px-6 border-b border-pd-border bg-pd-bg/80 flex h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md print:hidden"
@@ -300,7 +319,7 @@ watch(markdownInput, (val) => {
           class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent"
         >
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest font-bold uppercase">Back</span>
+          <span class="text-xs tracking-widest font-bold hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -315,7 +334,7 @@ watch(markdownInput, (val) => {
 
       <div class="text-xs text-pd-text-muted flex gap-3 flex-items-center">
         <!-- Cloud Sync Controls -->
-        <div class="hidden flex-items-center relative md:flex">
+        <div class="hidden flex-items-center relative lg:flex">
           <button
             class="text-[10px] text-pd-text-muted tracking-wider px-2.5 py-1.5 border border-pd-border rounded-[2px] bg-pd-bg-subtle/50 flex gap-1.5 cursor-pointer uppercase transition-all flex-items-center hover:text-pd-accent hover:bg-pd-bg-muted"
             :class="{ 'bg-pd-accent/5 border-pd-accent/20 text-pd-accent': recordId }"
@@ -413,7 +432,7 @@ watch(markdownInput, (val) => {
           </Transition>
         </div>
 
-        <div v-if="hasData" class="flex gap-2 hidden flex-items-center md:flex">
+        <div v-if="hasData" class="flex gap-2 hidden flex-items-center lg:flex">
           <div class="rounded-full bg-pd-bg-muted h-1.5 w-20 overflow-hidden">
             <div
               class="rounded-full h-full transition-all duration-500"
@@ -424,7 +443,7 @@ watch(markdownInput, (val) => {
           <span class="text-[10px] tracking-wider uppercase">{{ completeness }}%</span>
         </div>
 
-        <div v-if="hasData" class="mx-0.5 bg-pd-border h-3 w-px hidden md:block" />
+        <div v-if="hasData" class="mx-0.5 bg-pd-border h-3 w-px hidden lg:block" />
 
         <Transition name="fade">
           <span
@@ -453,14 +472,18 @@ watch(markdownInput, (val) => {
 
     <main
       id="resume-split-container"
-      class="flex flex-1 overflow-hidden print:overflow-visible"
-      :class="{ 'select-none': isDragging }"
+      class="flex flex-1 min-h-0 print:overflow-visible"
+      :class="[
+        isDesktop ? 'flex-row overflow-hidden' : 'flex-col overflow-y-auto',
+        { 'select-none': isDragging },
+      ]"
     >
       <div
-        class="border-r border-pd-border flex flex-col min-h-0 min-w-0 overflow-hidden print:hidden"
-        :style="{ width: `${leftWidth}%` }"
+        class="border-r border-pd-border flex flex-col min-h-[50vh] min-w-0 overflow-hidden print:hidden"
+        :class="isDesktop ? 'flex-none border-b-0 min-h-0' : 'w-full border-b'"
+        :style="leftPanelStyle"
       >
-        <div class="px-4 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex items-center justify-between">
+        <div class="px-3 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex flex-wrap gap-2 items-center justify-between md:px-4">
           <div class="flex gap-2 items-center">
             <Layers class="text-pd-text-muted h-3.5 w-3.5" :stroke-width="1.5" />
             <span class="text-[10px] text-pd-text-muted tracking-widest uppercase">
@@ -468,7 +491,7 @@ watch(markdownInput, (val) => {
             </span>
           </div>
 
-          <div class="flex gap-1 items-center">
+          <div class="flex flex-wrap gap-1 items-center justify-end">
             <button
               class="text-[10px] text-pd-text-muted tracking-wider px-2.5 py-1 border border-transparent rounded-[2px] cursor-pointer uppercase transition-all hover:text-pd-accent hover:border-pd-accent/20 hover:bg-pd-accent/5"
               title="加载示例 Markdown"
@@ -498,6 +521,7 @@ watch(markdownInput, (val) => {
       </div>
 
       <div
+        v-if="isDesktop"
         class="group bg-pd-border/40 shrink-0 w-1 cursor-col-resize transition-colors relative hover:bg-pd-accent/40 print:hidden"
         title="拖拽调整"
         @mousedown="onDividerMouseDown"
@@ -508,8 +532,9 @@ watch(markdownInput, (val) => {
       </div>
 
       <div
-        class="flex flex-col min-h-0 min-w-0 overflow-hidden print:w-full print:overflow-visible"
-        :style="{ width: `${100 - leftWidth}%` }"
+        class="flex flex-1 flex-col min-h-[50vh] min-w-0 overflow-hidden print:w-full print:overflow-visible"
+        :class="isDesktop ? 'flex-none min-h-0' : 'w-full'"
+        :style="rightPanelStyle"
       >
         <div class="custom-scrollbar bg-pd-bg-inset flex-1 min-h-0 w-full relative overflow-auto print:bg-white print:overflow-visible">
           <template v-if="hasData">

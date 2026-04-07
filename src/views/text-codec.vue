@@ -15,7 +15,7 @@ import {
   Type,
   Upload,
 } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 // ─── Tab System ───
@@ -259,6 +259,7 @@ async function pasteToOutput() {
 
 // ─── File Upload (Base64) ───
 const isDragOver = ref(false)
+const isDesktop = ref(false)
 
 function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement
@@ -296,25 +297,35 @@ function switchTab(tabId: TabId) {
   clearAll()
 }
 
+function updateViewportMode() {
+  isDesktop.value = window.innerWidth >= 960
+}
+
 // ─── Lifecycle ───
 onMounted(() => {
+  updateViewportMode()
+  window.addEventListener('resize', updateViewportMode)
   // Pre-populate with example
   input.value = 'Hello, 世界! 🌍'
   encode()
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateViewportMode)
+})
 </script>
 
 <template>
-  <div class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-bg selection:bg-pd-accent">
+  <div class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-bg selection:bg-pd-accent md:h-screen">
     <!-- Header -->
-    <header class="px-6 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md">
-      <div class="flex gap-4 items-center">
+    <header class="px-4 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <router-link
           to="/"
           class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent"
         >
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest font-bold uppercase">Back</span>
+          <span class="text-xs tracking-widest font-bold hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -327,7 +338,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="text-xs text-pd-text-muted flex gap-3 items-center">
+      <div class="text-xs text-pd-text-muted flex shrink-0 gap-2 items-center md:gap-3">
         <button
           class="text-[10px] tracking-widest font-bold px-3 py-1.5 border border-pd-border rounded-sm flex gap-1.5 uppercase transition-all items-center hover:text-pd-danger hover:border-pd-danger/50"
           @click="clearAll"
@@ -340,7 +351,7 @@ onMounted(() => {
     </header>
 
     <!-- Main Content -->
-    <main class="flex flex-1 flex-col overflow-hidden">
+    <main class="flex flex-1 flex-col min-h-0" :class="isDesktop ? 'overflow-hidden' : ''">
       <!-- Tab Bar -->
       <div class="px-2 border-b border-pd-border bg-pd-bg-subtle/30 flex shrink-0 items-center overflow-x-auto">
         <button
@@ -361,17 +372,23 @@ onMounted(() => {
       </div>
 
       <!-- Content Area -->
-      <div class="flex flex-1 gap-0 overflow-hidden">
+      <div
+        class="flex flex-1 gap-0 min-h-0"
+        :class="isDesktop ? 'flex-row overflow-hidden' : 'flex-col overflow-y-auto'"
+      >
         <!-- Left Panel: Input -->
-        <div class="border-r border-pd-border flex flex-1 flex-col min-w-0">
+        <div
+          class="border-r border-pd-border flex flex-1 flex-col min-h-[50vh] min-w-0"
+          :class="isDesktop ? 'border-b-0 min-h-0' : 'border-b'"
+        >
           <!-- Input Header -->
-          <div class="px-4 py-2.5 border-b border-pd-border bg-pd-bg-subtle/20 flex shrink-0 items-center justify-between">
+          <div class="px-3 py-2.5 border-b border-pd-border bg-pd-bg-subtle/20 flex shrink-0 flex-wrap gap-2 items-center justify-between md:px-4">
             <div class="flex gap-3 items-center">
               <span class="text-[9px] text-pd-text-muted tracking-[0.2em] font-bold uppercase transition-all">{{ inputLabel }}</span>
               <span class="text-[9px] text-pd-border font-bold">{{ inputByteCount }} bytes</span>
             </div>
 
-            <div class="flex gap-2 items-center">
+            <div class="flex flex-wrap gap-2 items-center justify-end">
               <!-- Paste Button -->
               <button
                 class="text-[9px] text-pd-accent tracking-widest font-bold px-2.5 py-1 border border-pd-border rounded-sm flex gap-1.5 uppercase transition-all items-center hover:border-pd-accent/50 hover:bg-pd-accent-muted"
@@ -400,7 +417,7 @@ onMounted(() => {
           <!-- File Drop Zone (Base64 file mode) -->
           <div
             v-if="isBase64Tab && isFileMode"
-            class="p-6 flex flex-1 flex-col gap-4 cursor-pointer transition-colors items-center justify-center relative"
+            class="p-4 flex flex-1 flex-col gap-4 cursor-pointer transition-colors items-center justify-center relative md:p-6"
             :class="isDragOver ? 'bg-pd-accent/5' : 'bg-pd-bg'"
             @dragover.prevent="isDragOver = true"
             @dragleave="isDragOver = false"
@@ -436,14 +453,18 @@ onMounted(() => {
           <textarea
             v-if="!(isBase64Tab && isFileMode)"
             v-model="input"
-            class="text-sm text-pd-text leading-relaxed font-mono p-4 outline-none bg-pd-bg flex-1 resize-none placeholder-pd-text-disabled"
+            class="text-sm text-pd-text leading-relaxed font-mono p-4 outline-none bg-pd-bg flex-1 min-h-[320px] resize-none placeholder-pd-text-disabled"
+            :class="isDesktop ? 'min-h-0' : ''"
             :placeholder="activeTab === 'jwt' ? 'eyJhbGciOiJIUzI1NiIs...' : '输入文本...'"
             spellcheck="false"
           />
         </div>
 
         <!-- Center Action Bar -->
-        <div class="px-2 py-4 bg-pd-bg-subtle/10 flex shrink-0 flex-col gap-2 items-center justify-center">
+        <div
+          class="px-2 py-2 bg-pd-bg-subtle/10 flex shrink-0 gap-2 items-center justify-center overflow-x-auto"
+          :class="isDesktop ? 'flex-col border-r border-pd-border' : 'flex-row border-b border-pd-border'"
+        >
           <!-- Encode -->
           <button
             v-if="showEncodeDecodeButtons"
@@ -465,7 +486,7 @@ onMounted(() => {
           </button>
 
           <!-- Hash Button -->
-          <div v-if="isHashTab" class="flex flex-col gap-2 items-center">
+          <div v-if="isHashTab" class="flex gap-2 items-center" :class="isDesktop ? 'flex-col' : 'flex-row'">
             <select
               v-model="hashAlgo"
               class="text-[9px] text-pd-text tracking-widest font-bold px-2 py-1.5 outline-none border border-pd-border rounded-sm bg-pd-bg cursor-pointer uppercase transition-colors hover:border-pd-accent/50"
@@ -504,15 +525,15 @@ onMounted(() => {
         </div>
 
         <!-- Right Panel: Output -->
-        <div class="flex flex-1 flex-col min-w-0">
+        <div class="flex flex-1 flex-col min-h-[50vh] min-w-0" :class="isDesktop ? 'min-h-0' : ''">
           <!-- Output Header -->
-          <div class="px-4 py-2.5 border-b border-pd-border bg-pd-bg-subtle/20 flex shrink-0 items-center justify-between">
+          <div class="px-3 py-2.5 border-b border-pd-border bg-pd-bg-subtle/20 flex shrink-0 flex-wrap gap-2 items-center justify-between md:px-4">
             <div class="flex gap-3 items-center">
               <span class="text-[9px] text-pd-text-muted tracking-[0.2em] font-bold uppercase">{{ outputLabel }}</span>
               <span class="text-[9px] text-pd-border font-bold">{{ outputByteCount }} bytes</span>
             </div>
 
-            <div class="flex gap-2 items-center">
+            <div class="flex flex-wrap gap-2 items-center justify-end">
               <!-- Paste Button -->
               <button
                 v-if="showSwapButton"
@@ -541,7 +562,8 @@ onMounted(() => {
           <!-- Output Content -->
           <textarea
             v-model="output"
-            class="text-sm text-pd-text leading-relaxed font-mono p-4 outline-none bg-pd-bg flex-1 resize-none placeholder-pd-text-disabled"
+            class="text-sm text-pd-text leading-relaxed font-mono p-4 outline-none bg-pd-bg flex-1 min-h-[320px] resize-none placeholder-pd-text-disabled"
+            :class="isDesktop ? 'min-h-0' : ''"
             placeholder="输出结果..."
             readonly
             spellcheck="false"
@@ -564,8 +586,8 @@ onMounted(() => {
       </div>
 
       <!-- Status Bar -->
-      <div class="px-4 py-2 border-t border-pd-border bg-pd-bg-subtle/20 flex shrink-0 items-center justify-between">
-        <div class="flex gap-4 items-center">
+      <div class="px-3 py-2 border-t border-pd-border bg-pd-bg-subtle/20 flex shrink-0 flex-wrap gap-2 items-center justify-between md:px-4">
+        <div class="flex flex-wrap gap-4 items-center">
           <span class="text-[9px] text-pd-text-muted tracking-widest uppercase">
             Mode: {{ activeTab.toUpperCase() }}
           </span>
@@ -573,7 +595,7 @@ onMounted(() => {
             Algo: {{ hashAlgo }}
           </span>
         </div>
-        <div class="flex gap-4 items-center">
+        <div class="flex flex-wrap gap-4 items-center">
           <span class="text-[9px] text-pd-text-disabled tracking-widest uppercase">
             Browser-side only
           </span>

@@ -40,6 +40,14 @@ const originalHeight = ref(600)
 // ── Split Pane ────────────────────────────────────────────────
 const leftWidth = ref(45)
 const isDragging = ref(false)
+const isDesktop = ref(false)
+
+const leftPanelStyle = computed(() => (isDesktop.value
+  ? { width: `${leftWidth.value}%`, flex: `0 0 ${leftWidth.value}%` }
+  : {}))
+const rightPanelStyle = computed(() => (isDesktop.value
+  ? { width: `${100 - leftWidth.value}%`, flex: `0 0 ${100 - leftWidth.value}%` }
+  : {}))
 
 // ── Monaco Editor ─────────────────────────────────────────────
 const editorContainer = ref<HTMLElement | null>(null)
@@ -330,8 +338,7 @@ async function handlePaste() {
     }
 
     if (!svgText.includes('<svg')) {
-      // eslint-disable-next-line no-alert
-      alert('Clipboard does not contain a valid SVG')
+      console.warn('Clipboard does not contain a valid SVG')
       return
     }
 
@@ -554,6 +561,8 @@ function handleCanvasMouseUp() {
 
 // ── Split Pane ────────────────────────────────────────────────
 function onDividerMouseDown(e: MouseEvent) {
+  if (!isDesktop.value)
+    return
   isDragging.value = true
   e.preventDefault()
 }
@@ -572,6 +581,12 @@ function onMouseMove(e: MouseEvent) {
 function onMouseUp() {
   isDragging.value = false
   isPanning.value = false
+}
+
+function updateViewportMode() {
+  isDesktop.value = window.innerWidth >= 960
+  if (!isDesktop.value)
+    isDragging.value = false
 }
 
 // ── Monaco Sync ───────────────────────────────────────────────
@@ -597,8 +612,10 @@ onMounted(async () => {
   if (typeof window === 'undefined')
     return
 
+  updateViewportMode()
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('resize', updateViewportMode)
   window.addEventListener('keydown', handleKeyDown)
   document.addEventListener('click', handleDocumentClick)
 
@@ -668,6 +685,7 @@ onUnmounted(() => {
   }
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('resize', updateViewportMode)
   window.removeEventListener('keydown', handleKeyDown)
   document.removeEventListener('click', handleDocumentClick)
 })
@@ -698,19 +716,19 @@ const zoomPercent = computed(() => `${Math.round(zoom.value * 100)}%`)
 
 <template>
   <div
-    class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-bg selection:bg-pd-accent"
+    class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-bg selection:bg-pd-accent md:h-screen"
   >
     <!-- Header -->
     <header
-      class="px-6 border-b border-pd-border bg-pd-bg/80 flex h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md"
+      class="px-4 border-b border-pd-border bg-pd-bg/80 flex h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6"
     >
-      <div class="flex gap-4 items-center">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <router-link
           to="/"
           class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent"
         >
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest uppercase">Back</span>
+          <span class="text-xs tracking-widest hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -723,17 +741,17 @@ const zoomPercent = computed(() => `${Math.round(zoom.value * 100)}%`)
         </div>
       </div>
 
-      <div class="text-xs text-pd-text-muted flex gap-3 items-center">
+      <div class="text-xs text-pd-text-muted flex shrink-0 gap-2 items-center md:gap-3">
         <template v-if="svgSource && !parseError">
           <span
-            class="text-pd-success px-2 py-0.5 border border-pd-success/20 rounded-[2px] bg-pd-success-muted hidden sm:inline"
+            class="text-pd-success px-2 py-0.5 border border-pd-success/20 rounded-[2px] bg-pd-success-muted hidden md:inline"
           >
             VALID
           </span>
-          <span class="hidden md:inline">
+          <span class="hidden lg:inline">
             {{ svgStats.elements }} elements · {{ svgStats.size }}
           </span>
-          <div class="mx-1 bg-pd-border h-3 w-px" />
+          <div class="mx-1 bg-pd-border h-3 w-px hidden md:block" />
         </template>
         <span
           v-if="parseError"
@@ -745,20 +763,24 @@ const zoomPercent = computed(() => `${Math.round(zoom.value * 100)}%`)
       </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- 修改后 -->
     <main
       id="svg-split-container"
-      class="flex flex-1 overflow-hidden"
-      :class="{ 'select-none': isDragging || isPanning }"
+      class="flex flex-1 min-h-0"
+      :class="[
+        isDesktop ? 'flex-row overflow-hidden' : 'flex-col overflow-y-auto',
+        { 'select-none': isDragging || isPanning },
+      ]"
     >
       <!-- Left Panel: Code Editor -->
       <div
-        class="border-r border-pd-border flex flex-col min-h-0 min-w-0 overflow-hidden"
-        :style="{ width: `${leftWidth}%` }"
+        class="border-r border-pd-border flex flex-col min-h-[50vh] min-w-0 overflow-hidden"
+        :class="isDesktop ? 'flex-none border-b-0 min-h-0' : 'w-full border-b'"
+        :style="leftPanelStyle"
       >
         <!-- Editor Toolbar -->
-        <div class="px-4 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex items-center justify-between">
-          <div class="flex gap-1 items-center">
+        <div class="px-3 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex flex-wrap gap-2 items-center justify-between md:px-4">
+          <div class="flex flex-wrap gap-1 items-center justify-end">
             <span class="text-[10px] text-pd-text-muted tracking-widest mr-2 uppercase">
               SOURCE
             </span>
@@ -870,6 +892,7 @@ const zoomPercent = computed(() => `${Math.round(zoom.value * 100)}%`)
 
       <!-- Divider -->
       <div
+        v-if="isDesktop"
         class="group bg-pd-border/40 shrink-0 w-1 cursor-col-resize transition-colors relative hover:bg-pd-accent/40"
         title="Drag to resize"
         @mousedown="onDividerMouseDown"
@@ -881,12 +904,13 @@ const zoomPercent = computed(() => `${Math.round(zoom.value * 100)}%`)
 
       <!-- Right Panel: Preview Canvas -->
       <div
-        class="flex flex-col min-h-0 min-w-0 overflow-hidden"
-        :style="{ width: `${100 - leftWidth}%` }"
+        class="flex flex-1 flex-col min-h-[50vh] min-w-0 overflow-hidden"
+        :class="isDesktop ? 'flex-none min-h-0' : 'w-full'"
+        :style="rightPanelStyle"
       >
         <!-- Preview Toolbar -->
-        <div class="px-4 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex items-center justify-between">
-          <div class="flex gap-1 items-center">
+        <div class="px-3 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex flex-wrap gap-2 items-center justify-between md:px-4">
+          <div class="flex flex-wrap gap-1 items-center justify-end">
             <span class="text-[10px] text-pd-text-muted tracking-widest mr-2 uppercase">
               PREVIEW
             </span>

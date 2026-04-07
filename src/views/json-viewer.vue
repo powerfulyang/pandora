@@ -30,8 +30,24 @@ const gutterRef = ref<HTMLDivElement | null>(null)
 // ── Split-pane ────────────────────────────────────────────────
 const leftWidth = ref(50) // percentage
 const isDragging = ref(false)
+const isDesktop = ref(false)
+
+const leftPanelStyle = computed(() => (isDesktop.value
+  ? {
+      width: `${leftWidth.value}%`,
+      flex: `0 0 ${leftWidth.value}%`,
+    }
+  : {}))
+const rightPanelStyle = computed(() => (isDesktop.value
+  ? {
+      width: `${100 - leftWidth.value}%`,
+      flex: `0 0 ${100 - leftWidth.value}%`,
+    }
+  : {}))
 
 function onDividerMouseDown(e: MouseEvent) {
+  if (!isDesktop.value)
+    return
   isDragging.value = true
   e.preventDefault()
 }
@@ -49,6 +65,12 @@ function onMouseMove(e: MouseEvent) {
 
 function onMouseUp() {
   isDragging.value = false
+}
+
+function updateViewportMode() {
+  isDesktop.value = window.innerWidth >= 960
+  if (!isDesktop.value)
+    isDragging.value = false
 }
 
 function syncScroll() {
@@ -184,15 +206,18 @@ function onGlobalPaste(e: ClipboardEvent) {
 }
 
 onMounted(() => {
+  updateViewportMode()
   document.addEventListener('paste', onGlobalPaste)
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('resize', updateViewportMode)
 })
 
 onUnmounted(() => {
   document.removeEventListener('paste', onGlobalPaste)
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('resize', updateViewportMode)
 })
 
 function jumpToError() {
@@ -248,19 +273,19 @@ function jumpToError() {
 
 <template>
   <div
-    class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-bg selection:bg-pd-accent"
+    class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-bg selection:bg-pd-accent md:h-screen"
   >
     <!-- Header -->
     <header
-      class="px-6 border-b border-pd-border bg-pd-bg/80 flex h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md"
+      class="px-4 border-b border-pd-border bg-pd-bg/80 flex h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6"
     >
-      <div class="flex gap-4 items-center">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <router-link
           to="/"
           class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent"
         >
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest uppercase">Back</span>
+          <span class="text-xs tracking-widest hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -273,17 +298,17 @@ function jumpToError() {
         </div>
       </div>
 
-      <div class="text-xs text-pd-text-muted flex gap-3 items-center">
+      <div class="text-xs text-pd-text-muted flex shrink-0 gap-2 items-center md:gap-3">
         <template v-if="parsedData !== null">
           <span
-            class="text-pd-success px-2 py-0.5 border border-pd-success/20 rounded-[2px] bg-pd-success-muted hidden sm:inline"
+            class="text-pd-success px-2 py-0.5 border border-pd-success/20 rounded-[2px] bg-pd-success-muted hidden md:inline"
           >
             VALID
           </span>
-          <span class="hidden md:inline">
+          <span class="hidden lg:inline">
             {{ stats.keys }} keys · depth {{ stats.depth }} · {{ stats.size }}
           </span>
-          <div class="mx-1 bg-pd-border h-3 w-px" />
+          <div class="mx-1 bg-pd-border h-3 w-px hidden md:block" />
         </template>
         <span
           v-if="parseError"
@@ -298,17 +323,21 @@ function jumpToError() {
     <!-- Main Content -->
     <main
       id="split-container"
-      class="flex flex-1 overflow-hidden"
-      :class="{ 'select-none': isDragging }"
+      class="flex flex-1 min-h-0"
+      :class="[
+        isDesktop ? 'flex-row overflow-hidden' : 'flex-col overflow-y-auto',
+        { 'select-none': isDragging },
+      ]"
     >
       <!-- Left Panel: Input -->
       <div
-        class="border-r border-pd-border flex flex-col min-h-0 min-w-0 overflow-hidden"
-        :style="{ width: `${leftWidth}%` }"
+        class="border-r border-pd-border flex flex-col min-h-[50vh] min-w-0 overflow-hidden"
+        :class="isDesktop ? 'flex-none border-b-0 min-h-0' : 'w-full border-b'"
+        :style="leftPanelStyle"
       >
         <!-- Input Toolbar -->
         <div
-          class="px-4 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex items-center justify-between"
+          class="px-3 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex flex-wrap gap-2 items-center justify-between md:px-4"
         >
           <div class="flex gap-1 items-center">
             <span class="text-[10px] text-pd-text-muted tracking-widest mr-2 uppercase">
@@ -319,7 +348,7 @@ function jumpToError() {
             </span>
           </div>
 
-          <div class="flex gap-1 items-center">
+          <div class="flex flex-wrap gap-1 items-center justify-end">
             <button
               class="text-[10px] text-pd-text-muted tracking-wider px-2.5 py-1 border border-transparent rounded-[2px] cursor-pointer uppercase transition-all hover:text-pd-accent hover:border-pd-accent/20 hover:bg-pd-accent/5"
               title="Load sample JSON"
@@ -349,9 +378,10 @@ function jumpToError() {
 
         <!-- Textarea -->
         <!-- Input & Gutter -->
-        <div class="flex flex-1 min-h-[200px] relative overflow-hidden lg:min-h-0">
+        <div class="flex flex-1 min-h-[320px] relative overflow-hidden" :class="isDesktop ? 'min-h-0' : ''">
           <!-- Gutter -->
           <div
+            v-if="isDesktop"
             ref="gutterRef"
             class="px-2 py-4 text-right border-r border-pd-border bg-pd-bg-subtle/50 flex flex-col w-10 select-none overflow-hidden"
           >
@@ -372,7 +402,8 @@ function jumpToError() {
               placeholder="Paste or type JSON here...
 
 Shortcut: Ctrl/Cmd + V anywhere on the page to auto-paste."
-              class="custom-scrollbar text-[13px] text-pd-text leading-6 p-4 bg-transparent h-full w-full resize-none placeholder:text-pd-text-disabled/50 focus:outline-none"
+              class="custom-scrollbar text-[13px] text-pd-text leading-6 p-4 bg-transparent h-full min-h-[320px] w-full resize-none placeholder:text-pd-text-disabled/50 focus:outline-none"
+              :class="isDesktop ? 'min-h-0' : ''"
               spellcheck="false"
               autocomplete="off"
               autocapitalize="off"
@@ -423,6 +454,7 @@ Shortcut: Ctrl/Cmd + V anywhere on the page to auto-paste."
 
       <!-- Divider -->
       <div
+        v-if="isDesktop"
         class="group bg-pd-border/40 shrink-0 w-1 cursor-col-resize transition-colors relative hover:bg-pd-accent/40"
         title="Drag to resize"
         @mousedown="onDividerMouseDown"
@@ -435,12 +467,13 @@ Shortcut: Ctrl/Cmd + V anywhere on the page to auto-paste."
 
       <!-- Right Panel: Viewer -->
       <div
-        class="flex flex-col min-h-0 min-w-0 overflow-hidden"
-        :style="{ width: `${100 - leftWidth}%` }"
+        class="flex flex-1 flex-col min-h-[50vh] min-w-0 overflow-hidden"
+        :class="isDesktop ? 'flex-none min-h-0' : 'w-full'"
+        :style="rightPanelStyle"
       >
         <!-- Viewer Toolbar -->
         <div
-          class="px-4 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex items-center justify-between"
+          class="px-3 py-2 border-b border-pd-border bg-pd-bg-subtle/30 flex flex-wrap gap-2 items-center justify-between md:px-4"
         >
           <div class="flex gap-1 items-center">
             <span class="text-[10px] text-pd-text-muted tracking-widest mr-2 uppercase">
@@ -451,7 +484,7 @@ Shortcut: Ctrl/Cmd + V anywhere on the page to auto-paste."
             </span>
           </div>
 
-          <div class="flex gap-1 items-center">
+          <div class="flex flex-wrap gap-1 items-center justify-end">
             <!-- Expand Level Control -->
             <div class="mr-1 flex gap-0.5 items-center">
               <button
@@ -529,7 +562,8 @@ Shortcut: Ctrl/Cmd + V anywhere on the page to auto-paste."
 
         <!-- JSON Tree Viewer -->
         <div
-          class="custom-scrollbar p-4 flex-1 min-h-0 w-full relative overflow-auto"
+          class="custom-scrollbar p-3 flex-1 min-h-[320px] w-full relative overflow-auto md:p-4"
+          :class="isDesktop ? 'min-h-0' : ''"
         >
           <template v-if="parsedData !== null">
             <VueJsonPretty
@@ -558,7 +592,7 @@ Shortcut: Ctrl/Cmd + V anywhere on the page to auto-paste."
         <!-- Stats Footer -->
         <div
           v-if="parsedData !== null"
-          class="text-[10px] text-pd-text-muted px-4 py-2 border-t border-pd-border bg-pd-bg-subtle/30 flex gap-4 items-center"
+          class="text-[10px] text-pd-text-muted px-3 py-2 border-t border-pd-border bg-pd-bg-subtle/30 flex flex-wrap gap-x-4 gap-y-1 items-center md:px-4"
         >
           <span>
             KEYS: <span class="text-pd-text">{{ stats.keys }}</span>

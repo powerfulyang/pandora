@@ -50,10 +50,6 @@ export default defineConfig({
           if (id.includes('@jsquash'))
             return 'vendor-jsquash'
 
-          // Shiki languages & themes → single chunk
-          if (id.includes('shiki') || id.includes('@shikijs'))
-            return 'vendor-shiki'
-
           // Vue ecosystem → single chunk
           if (id.includes('node_modules') && (
             id.includes('/vue/')

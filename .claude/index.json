@@ -1,0 +1,169 @@
+{
+  "timestamp": "2026-04-07T13:42:30+08:00",
+  "project": {
+    "name": "pandora",
+    "description": "Local-first browser utility toolbox with Vue 3 + TypeScript + Vite",
+    "type": "vue-spa",
+    "language": "TypeScript",
+    "framework": "Vue 3.5"
+  },
+  "root": {
+    "claudeMd": "CLAUDE.md",
+    "entryFiles": [
+      "src/main.ts"
+    ],
+    "configFiles": [
+      "vite.config.ts",
+      "unocss.config.ts",
+      "eslint.config.mjs",
+      "vitest.config.ts",
+      "cypress.config.ts",
+      "tsconfig.json",
+      "package.json"
+    ]
+  },
+  "modules": [
+    {
+      "id": "image-processor",
+      "name": "Image Processor",
+      "path": "src/views/image-processor.vue",
+      "description": "Chrome Web Store icon and promotional image exporter",
+      "technologies": ["Canvas", "JSquash"],
+      "hasTests": false
+    },
+    {
+      "id": "image-converter",
+      "name": "Image Converter",
+      "path": "src/views/image-converter.vue",
+      "description": "Batch image format conversion and compression with history",
+      "technologies": ["Web Worker", "JSquash WASM", "Comlink"],
+      "workerFiles": ["src/lib/image.worker.ts", "src/lib/image-processor.ts"],
+      "hasTests": false
+    },
+    {
+      "id": "json-viewer",
+      "name": "JSON Viewer",
+      "path": "src/views/json-viewer.vue",
+      "description": "Interactive JSON tree viewer with formatting and validation",
+      "technologies": ["vue-json-pretty"],
+      "hasTests": false
+    },
+    {
+      "id": "data-parser",
+      "name": "Data Parser",
+      "path": "src/views/data-parser.vue",
+      "description": "Excel/CSV to JSON extraction with TypeScript type generation",
+      "technologies": ["ExcelJS", "Monaco Editor", "papaparse"],
+      "componentFiles": [
+        "src/components/DataParser/FileUploader.vue",
+        "src/components/DataParser/DataPreview.vue",
+        "src/components/DataParser/TypeDisplay.vue",
+        "src/components/DataParser/CodePlayground.vue"
+      ],
+      "hasTests": false
+    },
+    {
+      "id": "text-codec",
+      "name": "Text Codec",
+      "path": "src/views/text-codec.vue",
+      "description": "Multi-format encoder/decoder (Base64, URL, Hash, JWT, Unicode)",
+      "technologies": ["crypto.subtle", "js-md5"],
+      "hasTests": false
+    },
+    {
+      "id": "dev-toolkit",
+      "name": "Dev Toolkit",
+      "path": "src/views/dev-toolkit.vue",
+      "description": "Regex tester, timestamp converter, color picker, text diff",
+      "technologies": ["dayjs", "LCS diff algorithm"],
+      "hasTests": false
+    },
+    {
+      "id": "svg-editor",
+      "name": "SVG Editor",
+      "path": "src/views/svg-editor.vue",
+      "description": "Interactive SVG vector graphics editor with live code sync",
+      "technologies": ["Fabric.js", "Monaco Editor"],
+      "publicAssets": ["public/svgedit/"],
+      "hasTests": false
+    },
+    {
+      "id": "pdf-to-image",
+      "name": "PDF to Image",
+      "path": "src/views/pdf-to-image.vue",
+      "description": "PDF page rendering to PNG/JPEG with batch processing",
+      "technologies": ["pdfjs-dist", "Web Worker", "Comlink", "JSZip"],
+      "workerFiles": ["src/lib/pdf.worker.ts"],
+      "publicAssets": ["public/pdfjs/cmaps/", "public/pdfjs/standard_fonts/"],
+      "hasTests": false
+    },
+    {
+      "id": "resume-builder",
+      "name": "Resume Builder",
+      "path": "src/views/resume-builder.vue",
+      "description": "Markdown-based resume editor with live preview and PDF export",
+      "technologies": ["marked"],
+      "hasTests": false
+    }
+  ],
+  "coreLibraries": {
+    "storage": {
+      "path": "src/lib/storage.ts",
+      "description": "localforage-based persistent storage layer",
+      "stores": ["recordStorage", "pdfRecordStorage", "dataParserStorage", "resumeBuilderStorage"]
+    },
+    "imageProcessor": {
+      "path": "src/lib/image-processor.ts",
+      "description": "WASM-based image encoding (WebP, AVIF, JPEG, PNG)"
+    },
+    "workers": [
+      "src/lib/image.worker.ts",
+      "src/lib/pdf.worker.ts"
+    ]
+  },
+  "sharedComponents": [
+    "src/components/ThemeToggle.vue",
+    "src/components/Modal.vue",
+    "src/components/ErrorBoundary.vue",
+    "src/components/ReloadPrompt.vue",
+    "src/components/HistoryPreview.vue",
+    "src/components/ClientClock.vue",
+    "src/components/ClientDate.vue",
+    "src/components/MonacoEditor.vue"
+  ],
+  "layouts": [
+    "src/layouts/default.vue",
+    "src/layouts/blank.vue"
+  ],
+  "testCoverage": {
+    "unit": {
+      "framework": "vitest",
+      "configFile": "vitest.config.ts",
+      "testFiles": 0,
+      "note": "Vitest configured but no test files yet"
+    },
+    "e2e": {
+      "framework": "cypress",
+      "configFile": "cypress.config.ts",
+      "testFiles": 1,
+      "specPattern": "cypress/e2e/**/*.{cy,spec}.{js,jsx,ts,tsx}"
+    }
+  },
+  "scanStats": {
+    "totalFiles": 48,
+    "scannedFiles": 48,
+    "coverage": "100%",
+    "skippedDirs": ["node_modules", "dist", ".git"],
+    "truncated": false
+  },
+  "gaps": {
+    "missingTests": true,
+    "missingDataModels": false,
+    "missingApiDefinitions": true,
+    "suggestions": [
+      "Add unit tests for utility functions in src/utils/",
+      "Add E2E tests for core workflows",
+      "Consider extracting shared types to src/types/"
+    ]
+  }
+}

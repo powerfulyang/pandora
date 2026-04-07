@@ -1,6 +1,6 @@
 export function downloadFile(blob: Blob, name: string, format?: string) {
   const finalName = format
-    ? (name.toLowerCase().endsWith(`.${format.toLowerCase()}`) ? name : `${name}.${format}`)
+    ? (name.toLowerCase().endsWith(`.${format.toLowerCase()}`) ? name : `${name.replace(/\.[^/.]+$/, '')}.${format}`)
     : name
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

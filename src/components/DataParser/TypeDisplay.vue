@@ -1,43 +1,12 @@
 <script setup lang="ts">
 import { Check, Copy } from 'lucide-vue-next'
-import { createHighlighter } from 'shiki'
-import { onMounted, ref, watch } from 'vue'
-
-import { useTheme } from '@/composables/useTheme'
+import { ref } from 'vue'
 
 const props = defineProps<{
   types: string
 }>()
 
 const copied = ref(false)
-const highlightedTypes = ref('')
-const { resolvedTheme } = useTheme()
-
-let highlighter: any = null
-
-async function initHighlighter() {
-  if (!highlighter) {
-    highlighter = await createHighlighter({
-      themes: ['vitesse-dark', 'vitesse-light'],
-      langs: ['typescript'],
-    })
-  }
-  updateHighlight()
-}
-
-function updateHighlight() {
-  if (!highlighter || !props.types)
-    return
-  highlightedTypes.value = highlighter.codeToHtml(props.types, {
-    lang: 'typescript',
-    theme: resolvedTheme.value === 'dark' ? 'vitesse-dark' : 'vitesse-light',
-  })
-}
-
-watch(() => props.types, updateHighlight)
-watch(resolvedTheme, updateHighlight)
-
-onMounted(initHighlighter)
 
 async function handleCopy() {
   await navigator.clipboard.writeText(props.types)
@@ -62,9 +31,10 @@ async function handleCopy() {
     </div>
 
     <div
-      class="custom-scrollbar text-[var(--shiki-fg)] p-6 border border-pd-border rounded-sm bg-[var(--shiki-bg)] max-h-[600px] transition-colors overflow-auto"
-      v-html="highlightedTypes"
-    />
+      class="custom-scrollbar bg-pd-bg-dark p-6 border border-pd-border rounded-sm max-h-[600px] transition-colors overflow-auto"
+    >
+      <pre class="text-xs text-pd-text font-mono whitespace-pre-wrap">{{ types }}</pre>
+    </div>
 
     <div class="p-4 border border-pd-accent/20 rounded-sm bg-pd-accent/5">
       <p class="text-[10px] text-pd-accent tracking-widest font-bold mb-1 uppercase">
@@ -77,13 +47,9 @@ async function handleCopy() {
   </div>
 </template>
 
-<style>
-/* Shiki dynamic colors using vitesse themes */
-.shiki {
-  padding: 0 !important;
-  background-color: transparent !important;
-  font-size: 12px;
-  line-height: var(--un-line-height-relaxed);
-  font-family: var(--un-font-sans);
+<style scoped>
+pre {
+  margin: 0;
+  line-height: 1.6;
 }
 </style>

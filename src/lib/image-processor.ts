@@ -5,7 +5,7 @@ import { optimise as optimizePng } from '@jsquash/oxipng'
 import resize from '@jsquash/resize'
 import { encode as encodeWebp } from '@jsquash/webp'
 
-export type ImageFormat = 'webp' | 'avif' | 'jpeg' | 'png'
+export type ImageFormat = 'webp' | 'avif' | 'jpeg' | 'png' | 'heic'
 
 export interface ProcessOptions {
   format: ImageFormat
@@ -14,8 +14,82 @@ export interface ProcessOptions {
   height?: number
 }
 
-export async function decodeImage(blob: Blob): Promise<ImageData> {
-  const bitmap = await createImageBitmap(blob)
+const HEIC_MIME_TYPES = new Set([
+  'image/heic',
+  'image/heif',
+  'image/heic-sequence',
+  'image/heif-sequence',
+])
+
+const HEIC_FTYP_BRANDS = new Set([
+  'heic',
+  'heix',
+  'hevc',
+  'hevx',
+  'heim',
+  'heis',
+  'hevm',
+  'hevs',
+  'mif1',
+  'msf1',
+])
+
+/**
+ * Detects whether a Blob is a HEIC/HEIF image by checking MIME type
+ * and falling back to magic bytes (ftyp box) inspection.
+ */
+async function isHeicBlob(blob: Blob): Promise<boolean> {
+  // Fast path: MIME type check
+  if (HEIC_MIME_TYPES.has(blob.type))
+    return true
+
+  // Extension-based heuristic for empty MIME (common on Windows)
+  if (!blob.type || blob.type === 'application/octet-stream') {
+    // Read the ftyp header: bytes 4-8 should be "ftyp", bytes 8-12 are the brand
+    const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer())
+    if (header.length < 12)
+      return false
+
+    const ftyp = String.fromCharCode(header[4]!, header[5]!, header[6]!, header[7]!)
+    if (ftyp !== 'ftyp')
+      return false
+
+    const brand = String.fromCharCode(header[8]!, header[9]!, header[10]!, header[11]!)
+    return HEIC_FTYP_BRANDS.has(brand)
+  }
+
+  return false
+}
+
+/**
+ * Decodes a HEIC/HEIF blob into ImageData using the elheif library.
+ * Dynamically imported to avoid bundling when not needed.
+ */
+async function decodeHeicBlob(blob: Blob): Promise<ImageData> {
+  const { ensureInitialized, jsDecodeImage } = await import('elheif')
+  await ensureInitialized()
+
+  const buffer = new Uint8Array(await blob.arrayBuffer())
+  const result = jsDecodeImage(buffer)
+
+  if (result.err)
+    throw new Error(`HEIF decoding error: ${result.err}`)
+
+  if (!result.data || result.data.length === 0)
+    throw new Error('No images found in HEIF file')
+
+  const image = result.data[0]!
+  return new ImageData(
+    new Uint8ClampedArray(image.data.slice()),
+    image.width,
+    image.height,
+  )
+}
+
+/**
+ * Converts a Blob to ImageData using createImageBitmap + canvas.
+ */
+function decodeBitmapBlob(bitmap: ImageBitmap): ImageData {
   const { width, height } = bitmap
 
   let canvas: OffscreenCanvas | HTMLCanvasElement
@@ -36,6 +110,18 @@ export async function decodeImage(blob: Blob): Promise<ImageData> {
   bitmap.close()
 
   return ctx.getImageData(0, 0, width, height)
+}
+
+/**
+ * Decodes an image blob to ImageData, with HEIC/HEIF support.
+ * For HEIC files, uses heic-decode (WASM). For other formats, uses native createImageBitmap.
+ */
+export async function decodeImage(blob: Blob): Promise<ImageData> {
+  if (await isHeicBlob(blob))
+    return decodeHeicBlob(blob)
+
+  const bitmap = await createImageBitmap(blob)
+  return decodeBitmapBlob(bitmap)
 }
 
 /**
@@ -154,6 +240,21 @@ export async function processAndEncodeImage(
       const pngBuffer = await blob.arrayBuffer()
       buffer = await optimizePng(pngBuffer, { level: 3 })
       break
+    }
+    case 'heic': {
+      const { ensureInitialized, jsEncodeImage } = await import('elheif')
+      await ensureInitialized()
+
+      const result = jsEncodeImage(
+        new Uint8Array(processedData.data.buffer),
+        processedData.width,
+        processedData.height,
+      )
+
+      if (result.err)
+        throw new Error(`HEIF encoding error: ${result.err}`)
+
+      return new Blob([result.data.slice()], { type: 'image/heic' })
     }
     default:
       throw new Error(`Unsupported format: ${options.format}`)

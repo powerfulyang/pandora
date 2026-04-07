@@ -51,6 +51,21 @@ const history = ref<ProcessingRecord[]>([])
 const activeTab = ref<'queue' | 'history'>('queue')
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
+// HEIC/HEIF extensions for cases where the OS doesn't set a proper MIME type
+const HEIC_EXTENSIONS = /\.(?:heic|heif)$/i
+
+/**
+ * Checks whether a File is an accepted image type,
+ * including HEIC/HEIF which may not have a recognized MIME type on some platforms.
+ */
+function isAcceptedImageFile(file: File): boolean {
+  if (file.type.startsWith('image/'))
+    return true
+  if (HEIC_EXTENSIONS.test(file.name))
+    return true
+  return false
+}
+
 // Worker setup
 let worker: Worker | null = null
 let workerApi: Comlink.Remote<ImageWorkerAPI> | null = null
@@ -93,7 +108,7 @@ function handleDrop(e: DragEvent) {
   e.preventDefault()
   isDragging.value = false
   const droppedFiles = Array.from(e.dataTransfer?.files || []).filter(f =>
-    f.type.startsWith('image/'),
+    isAcceptedImageFile(f),
   )
   addFiles(droppedFiles)
 }
@@ -102,7 +117,7 @@ function handleFileSelect(e: Event) {
   const input = e.target as HTMLInputElement
   if (input.files) {
     const selectedFiles = Array.from(input.files).filter(f =>
-      f.type.startsWith('image/'),
+      isAcceptedImageFile(f),
     )
     addFiles(selectedFiles)
   }
@@ -284,19 +299,19 @@ const reversedFiles = computed(() => [...files.value].reverse())
 
 <template>
   <div
-    class="text-pd-text bg-pd-bg flex flex-col h-screen overflow-hidden selection:text-pd-accent selection:bg-pd-accent-muted"
+    class="text-pd-text bg-pd-bg flex flex-col min-h-screen selection:text-pd-accent selection:bg-pd-accent-muted md:h-screen"
   >
     <!-- Header -->
     <header
-      class="px-6 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md"
+      class="px-4 border-b border-pd-border bg-pd-bg/80 flex shrink-0 h-14 items-center top-0 justify-between sticky z-50 backdrop-blur-md md:px-6"
     >
-      <div class="flex gap-4 items-center">
+      <div class="flex gap-3 min-w-0 items-center md:gap-4">
         <router-link
           to="/"
           class="text-pd-text-muted flex gap-2 transition-colors items-center hover:text-pd-accent"
         >
           <ArrowLeft class="h-4 w-4" :stroke-width="1.5" />
-          <span class="text-xs tracking-widest uppercase">Back</span>
+          <span class="text-xs tracking-widest hidden uppercase md:inline">Back</span>
         </router-link>
         <div class="bg-pd-border h-5 w-px" />
         <div class="flex gap-2 items-center">
@@ -310,7 +325,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
       </div>
 
       <div class="text-xs text-pd-text-muted flex gap-3 items-center">
-        <div class="gap-2 hidden items-center md:flex">
+        <div class="gap-2 hidden items-center lg:flex">
           <span class="text-[10px] text-pd-text-muted tracking-widest font-bold uppercase">
             Mode
           </span>
@@ -323,11 +338,11 @@ const reversedFiles = computed(() => [...files.value].reverse())
 
     <!-- Main -->
     <main
-      class="bg-bg-angled p-4 flex-1 gap-6 grid grid-cols-1 min-h-0 overflow-hidden lg:p-8 sm:p-6 lg:gap-8 lg:grid-cols-12"
+      class="bg-bg-angled p-4 flex-1 gap-6 grid grid-cols-1 min-h-0 lg:p-8 sm:p-6 lg:gap-8 lg:grid-cols-12 lg:grid-rows-1 lg:overflow-hidden"
     >
       <!-- Left Panel: Upload & Settings -->
-      <section class="custom-scrollbar pr-2 flex flex-col gap-6 col-span-1 overflow-y-auto lg:col-span-4 xl:col-span-3">
-        <div class="space-y-2">
+      <section class="custom-scrollbar pr-2 flex flex-col gap-6 col-span-1 lg:col-span-4 xl:col-span-3 lg:overflow-y-auto">
+        <div class="flex flex-col gap-2">
           <h2 class="text-lg text-pd-text tracking-tight font-bold flex gap-2 uppercase items-center">
             Image Converter
           </h2>
@@ -338,7 +353,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
 
         <!-- Upload Zone -->
         <div
-          class="group border-2 rounded-sm border-dashed flex flex-col gap-4 h-64 transition-all duration-200 items-center justify-center relative overflow-hidden" :class="[
+          class="group border-2 rounded-sm border-dashed flex flex-col gap-4 min-h-[200px] transition-all duration-200 items-center justify-center relative overflow-hidden md:h-64" :class="[
             isDragging
               ? 'border-pd-accent bg-pd-accent/5'
               : 'border-pd-border/50 hover:border-pd-accent/50 bg-pd-bg-subtle/40',
@@ -351,7 +366,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
             ref="fileInputRef"
             type="file"
             multiple
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             class="opacity-0 h-full w-full cursor-pointer inset-0 absolute z-10"
             @change="handleFileSelect"
           >
@@ -361,7 +376,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
             <ImagePlus class="text-pd-text-muted h-6 w-6 transition-colors group-hover:text-pd-accent" :stroke-width="1.5" />
           </div>
           <div class="text-center flex flex-col gap-3 items-center">
-            <div class="space-y-1">
+            <div class="flex flex-col gap-1">
               <p class="text-xs text-pd-text-secondary tracking-widest font-bold uppercase">
                 Workspace Input
               </p>
@@ -377,7 +392,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
               <span class="text-pd-accent group-hover:animate-pulse">Paste</span>
             </div>
             <p class="text-[9px] text-pd-text-disabled tracking-tighter uppercase">
-              Format: WebP, AVIF, PNG, JPEG
+              Input: WebP, AVIF, PNG, JPEG, HEIC
             </p>
           </div>
         </div>
@@ -391,8 +406,8 @@ const reversedFiles = computed(() => [...files.value].reverse())
             <span class="text-xs tracking-widest font-bold uppercase">Configuration</span>
           </div>
 
-          <div class="space-y-4">
-            <div class="space-y-2">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
               <label class="text-xs text-pd-text-muted uppercase">Output Format</label>
               <div class="w-full relative">
                 <select
@@ -411,13 +426,16 @@ const reversedFiles = computed(() => [...files.value].reverse())
                   <option value="png">
                     PNG
                   </option>
+                  <option value="heic">
+                    HEIC
+                  </option>
                 </select>
                 <ChevronDown class="text-pd-text-muted h-4 w-4 pointer-events-none right-2.5 top-1/2 absolute -translate-y-1/2" :stroke-width="1.5" />
               </div>
             </div>
 
-            <div class="space-y-2">
-              <div class="flex justify-between">
+            <div class="flex flex-col gap-2">
+              <div class="mt-1 flex justify-between">
                 <label class="text-xs text-pd-text-muted uppercase">Quality</label>
                 <span class="text-xs text-pd-accent">{{ configuration.quality }}%</span>
               </div>
@@ -452,7 +470,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
 
       <!-- Right Panel: Lists -->
       <section
-        class="border border-pd-border rounded-sm bg-pd-bg/60 flex flex-col col-span-1 min-h-[600px] shadow-2xl shadow-black/10 overflow-hidden backdrop-blur-sm lg:col-span-8 xl:col-span-9"
+        class="border border-pd-border rounded-sm bg-pd-bg/60 flex flex-col col-span-1 shadow-2xl shadow-black/10 backdrop-blur-sm lg:col-span-8 xl:col-span-9 lg:min-h-[600px] lg:overflow-hidden"
       >
         <!-- Tabs -->
         <div class="border-b border-pd-border flex relative">
@@ -498,14 +516,14 @@ const reversedFiles = computed(() => [...files.value].reverse())
         </div>
 
         <!-- Content -->
-        <div class="custom-scrollbar p-6 flex flex-1 flex-col overflow-y-auto">
+        <div class="custom-scrollbar p-6 flex flex-1 flex-col lg:overflow-y-auto">
           <template v-if="activeTab === 'queue'">
             <div
               v-if="files.length === 0"
               class="text-pd-text-muted py-20 opacity-50 flex flex-1 flex-col h-full items-center justify-center"
             >
               <ImagePlus class="mb-4 h-12 w-12" :stroke-width="1" />
-              <div class="text-center space-y-2">
+              <div class="text-center flex flex-col gap-2">
                 <p class="text-sm text-pd-text-secondary">
                   Queue is empty
                 </p>
@@ -527,13 +545,9 @@ const reversedFiles = computed(() => [...files.value].reverse())
                 <div
                   class="bg-bg-angled border-b border-pd-border flex shrink-0 h-48 w-full items-center justify-center relative overflow-hidden"
                 >
-                  <img
-                    v-if="file.previewUrl"
-                    :src="file.previewUrl"
-                    alt="preview"
-                    class="h-full w-full object-contain"
-                    loading="lazy"
-                  >
+                  <HistoryPreview
+                    :blob="file.resultBlob || file.file"
+                  />
 
                   <!-- Floating Actions -->
                   <div
@@ -566,7 +580,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
                 </div>
 
                 <!-- Info Bar -->
-                <div class="p-3 space-y-3">
+                <div class="p-3 flex flex-col gap-3">
                   <div class="flex gap-4 items-start justify-between">
                     <div class="min-w-0">
                       <h4 class="text-sm text-pd-text font-bold mb-1 truncate">
@@ -678,7 +692,7 @@ const reversedFiles = computed(() => [...files.value].reverse())
                 </div>
 
                 <!-- Info Bar -->
-                <div class="p-3 space-y-2">
+                <div class="p-3 flex flex-col gap-2">
                   <div class="flex gap-4 items-start justify-between">
                     <div class="min-w-0">
                       <h4 class="text-sm text-pd-text font-bold mb-0.5 truncate">
