@@ -1,11 +1,14 @@
-import mermaid from 'mermaid'
+async function getMermaid() {
+  return (await import('mermaid')).default
+}
 
 let initialized = false
 
 /**
  * Initialize Mermaid with theme configuration
  */
-export function initMermaid(theme: 'dark' | 'default' = 'default') {
+export async function initMermaid(theme: 'dark' | 'default' = 'default') {
+  const mermaid = await getMermaid()
   mermaid.initialize({
     startOnLoad: false,
     theme,
@@ -33,8 +36,9 @@ export function isInitialized(): boolean {
  * @returns SVG string or empty string on error
  */
 export async function renderMermaid(id: string, code: string): Promise<string> {
+  const mermaid = await getMermaid()
   if (!initialized) {
-    initMermaid()
+    await initMermaid()
   }
 
   try {
@@ -53,8 +57,9 @@ export async function renderMermaid(id: string, code: string): Promise<string> {
  * @returns true if valid, false otherwise
  */
 export async function validateMermaid(code: string): Promise<boolean> {
+  const mermaid = await getMermaid()
   if (!initialized) {
-    initMermaid()
+    await initMermaid()
   }
 
   try {
@@ -72,8 +77,9 @@ export async function validateMermaid(code: string): Promise<boolean> {
  * @returns error message string or null if valid
  */
 export async function getMermaidParseError(code: string): Promise<string | null> {
+  const mermaid = await getMermaid()
   if (!initialized) {
-    initMermaid()
+    await initMermaid()
   }
 
   try {
@@ -97,7 +103,8 @@ export async function getMermaidParseError(code: string): Promise<string | null>
  * Reinitialize Mermaid with a new theme
  * Call this when theme changes
  */
-export function updateMermaidTheme(theme: 'dark' | 'default') {
+export async function updateMermaidTheme(theme: 'dark' | 'default') {
+  const mermaid = await getMermaid()
   mermaid.initialize({
     startOnLoad: false,
     theme,

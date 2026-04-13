@@ -185,7 +185,7 @@ const itemVariants = {
 
       <!-- Tools Grid -->
       <motion.div
-        class="gap-4 grid grid-cols-1 md:grid-cols-3"
+        class="gap-4 grid grid-cols-1 md:grid-cols-4"
         :initial="containerVariants.hidden"
         :animate="containerVariants.visible"
       >

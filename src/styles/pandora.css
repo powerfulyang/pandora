@@ -1,7 +1,6 @@
 /* ──────────────────────────────────────────────────────────────
    Google Fonts: Outfit (display), JetBrains Mono (default/mono)
    ────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Sans+SC:wght@100..900');
 
 /* ──────────────────────────────────────────────────────────────
    Light Theme (Clinical Variant)
@@ -237,4 +236,18 @@ body {
   display: inline-block;
   cursor: crosshair;
   overflow: hidden;
+}
+
+/* Mermaid Rendering Fix - Hide original text until processed */
+.mermaid:not([data-processed='true']) {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.mermaid[data-processed='true'] {
+  opacity: 1;
+  height: auto;
+  transition: opacity 0.3s ease;
 }

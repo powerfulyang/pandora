@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type * as monaco from 'monaco-editor'
 import { useDebounceFn } from '@vueuse/core'
+
 import {
   ArrowLeft,
   Check,
@@ -15,8 +17,8 @@ import {
   Sparkles,
   Wand2,
 } from 'lucide-vue-next'
-import { marked } from 'marked'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import MarkdownRenderer from '@/components/MarkdownRenderer'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { request } from '@/http-client'
 
@@ -116,30 +118,50 @@ function updateViewportMode() {
     isDragging.value = false
 }
 
-onMounted(() => {
-  updateViewportMode()
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp)
-  window.addEventListener('resize', updateViewportMode)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('mousemove', onMouseMove)
-  window.removeEventListener('mouseup', onMouseUp)
-  window.removeEventListener('resize', updateViewportMode)
-})
-
 // ── Markdown editor state ─────────────────────────────────────
 const markdownInput = ref('')
 const previewRef = ref<HTMLDivElement | null>(null)
 const saved = ref(false)
+const isEditorReady = ref(false)
+
+// ── Monaco Editor ─────────────────────────────────────────────
+const editorContainer = ref<HTMLElement | null>(null)
+let monacoEditorInstance: monaco.editor.IStandaloneCodeEditor | null = null
+let monacoApi: typeof monaco | null = null
+const themeObserver = shallowRef<MutationObserver | null>(null)
+
+function syncEditorValue() {
+  if (monacoEditorInstance && monacoApi && markdownInput.value !== monacoEditorInstance.getValue()) {
+    const model = monacoEditorInstance.getModel()
+    if (model) {
+      monacoEditorInstance.pushUndoStop()
+      monacoEditorInstance.executeEdits('external-sync', [{
+        range: model.getFullModelRange(),
+        text: markdownInput.value,
+      }])
+      monacoEditorInstance.pushUndoStop()
+    }
+    else {
+      monacoEditorInstance.setValue(markdownInput.value)
+    }
+  }
+}
+
+function updateEditorTheme() {
+  if (monacoApi) {
+    const isDark = document.documentElement.classList.contains('dark')
+    monacoApi.editor.setTheme(isDark ? 'vs-dark' : 'vs')
+  }
+}
 
 function loadSample() {
   markdownInput.value = DEFAULT_MARKDOWN
+  syncEditorValue()
 }
 
 function clearAll() {
   markdownInput.value = ''
+  syncEditorValue()
 }
 
 const hasData = computed(() => markdownInput.value.trim().length > 0)
@@ -162,20 +184,27 @@ const completeness = computed(() => {
   return Math.round((score / checks.length) * 100)
 })
 
-function sanitizeHtml(input: string): string {
-  return input
-    .replace(/<\/?(script|style|iframe|object|embed)[^>]*>/gi, '')
-    .replace(/\son\w+=("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/javascript:/gi, '')
+async function renderMermaid() {
+  await nextTick()
+  if (!previewRef.value)
+    return
+  const mermaidNodes = previewRef.value.querySelectorAll('.mermaid')
+  if (mermaidNodes.length === 0)
+    return
+
+  try {
+    const { default: mermaid } = await import('mermaid')
+    mermaid.initialize({ startOnLoad: false, theme: 'default' })
+    await mermaid.run({
+      nodes: Array.from(mermaidNodes) as HTMLElement[],
+    })
+  }
+  catch (e) {
+    console.error('Mermaid render error', e)
+  }
 }
 
-const renderedMarkdown = computed(() => {
-  const raw = marked.parse(markdownInput.value, {
-    gfm: true,
-    breaks: true,
-  })
-  return sanitizeHtml(typeof raw === 'string' ? raw : '')
-})
+watch(markdownInput, renderMermaid, { immediate: true })
 
 function handlePrint() {
   if (!previewRef.value)
@@ -275,6 +304,11 @@ function onBaseUrlChange() {
 }
 
 onMounted(async () => {
+  updateViewportMode()
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('resize', updateViewportMode)
+
   const cachedId = localStorage.getItem(RECORD_ID_KEY)
   const cachedBase = localStorage.getItem(RECORD_BASE_URL_KEY)
   if (cachedBase) {
@@ -290,6 +324,101 @@ onMounted(async () => {
     const cached = localStorage.getItem(STORAGE_KEY)
     markdownInput.value = cached ?? DEFAULT_MARKDOWN
   }
+
+  // Theme observer
+  themeObserver.value = new MutationObserver(() => {
+    updateEditorTheme()
+  })
+  themeObserver.value.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  })
+
+  // Dynamically import Monaco Editor
+  try {
+    // Set up workers for Monaco if not already set
+    if (typeof window !== 'undefined' && !window.MonacoEnvironment) {
+      const EditorWorker = (await import('monaco-editor/esm/vs/editor/editor.worker?worker')).default
+      const JsonWorker = (await import('monaco-editor/esm/vs/language/json/json.worker?worker')).default
+      const TsWorker = (await import('monaco-editor/esm/vs/language/typescript/ts.worker?worker')).default
+
+      window.MonacoEnvironment = {
+        getWorker(_, label) {
+          if (label === 'json')
+            return new JsonWorker()
+          if (label === 'typescript' || label === 'javascript')
+            return new TsWorker()
+          return new EditorWorker()
+        },
+      }
+    }
+
+    // Register basic languages for code block highlighting
+    await Promise.all([
+      import('monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/css/css.contribution.js'),
+      import('monaco-editor/esm/vs/language/json/monaco.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/html/html.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/python/python.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/shell/shell.contribution.js'),
+      import('monaco-editor/esm/vs/basic-languages/sql/sql.contribution.js'),
+    ])
+
+    // @ts-expect-error - editor.api doesn't have a specific type declaration
+    const monacoModule = await import('monaco-editor/esm/vs/editor/editor.api')
+    monacoApi = monacoModule as any
+    const isDark = document.documentElement.classList.contains('dark')
+
+    if (editorContainer.value) {
+      const editor = monacoModule.editor.create(editorContainer.value, {
+        value: markdownInput.value,
+        language: 'markdown',
+        theme: isDark ? 'vs-dark' : 'vs',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        fontSize: 13,
+        lineHeight: 22,
+        scrollBeyondLastLine: false,
+        wordWrap: 'on',
+        renderWhitespace: 'selection',
+        bracketPairColorization: { enabled: true },
+        padding: { top: 12, bottom: 12 },
+        scrollbar: {
+          verticalScrollbarSize: 4,
+          horizontalScrollbarSize: 4,
+        },
+        overviewRulerBorder: false,
+        overviewRulerLanes: 0,
+        hideCursorInOverviewRuler: true,
+        guides: {
+          indentation: true,
+          bracketPairs: true,
+        },
+      })
+
+      monacoEditorInstance = editor
+
+      editor.onDidChangeModelContent(() => {
+        markdownInput.value = editor.getValue()
+      })
+
+      isEditorReady.value = true
+    }
+  }
+  catch (err) {
+    console.error('Failed to load Monaco Editor:', err)
+  }
+})
+
+onUnmounted(() => {
+  monacoEditorInstance?.dispose()
+  themeObserver.value?.disconnect()
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mouseup', onMouseUp)
+  window.removeEventListener('resize', updateViewportMode)
 })
 
 watch(markdownInput, (val) => {
@@ -511,12 +640,20 @@ watch(markdownInput, (val) => {
           </div>
         </div>
 
-        <div class="p-4 flex-1 min-h-0">
-          <textarea
-            v-model="markdownInput"
-            class="markdown-editor"
-            placeholder="# 在这里编写你的简历 Markdown..."
-          />
+        <!-- Monaco Editor Container -->
+        <div class="flex-1 min-h-0 relative overflow-hidden">
+          <div ref="editorContainer" class="h-full w-full" />
+
+          <!-- Loading Overlay -->
+          <div
+            v-if="!isEditorReady"
+            class="bg-pd-bg flex flex-col pointer-events-none items-center inset-0 justify-center absolute"
+          >
+            <Layers class="text-pd-border mb-3 h-10 w-10" :stroke-width="0.6" />
+            <p class="text-[10px] text-pd-text-disabled tracking-widest uppercase">
+              Loading Editor...
+            </p>
+          </div>
         </div>
       </div>
 
@@ -543,7 +680,7 @@ watch(markdownInput, (val) => {
                 ref="previewRef"
                 class="resume-preview border border-pd-border/40 rounded-sm bg-white shadow-sm overflow-hidden print:border-none print:shadow-none"
               >
-                <article class="markdown-preview" v-html="renderedMarkdown" />
+                <MarkdownRenderer :content="markdownInput" />
               </div>
             </div>
           </template>
@@ -577,28 +714,6 @@ watch(markdownInput, (val) => {
 </template>
 
 <style>
-.markdown-editor {
-  width: 100%;
-  height: 100%;
-  min-height: 240px;
-  resize: none;
-  border: 1px solid var(--pd-border);
-  border-radius: 4px;
-  background: var(--pd-bg);
-  color: var(--pd-text);
-  padding: 14px;
-  font-family: Kaiti;
-  outline: none;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-}
-
-.markdown-editor:focus {
-  border-color: var(--pd-accent);
-  box-shadow: 0 0 0 2px var(--pd-accent-muted);
-}
-
 .resume-preview {
   width: 100%;
   box-sizing: border-box;
@@ -698,7 +813,6 @@ watch(markdownInput, (val) => {
 }
 
 .markdown-preview h3 + p > strong:only-child {
-  display: inline-block;
   margin: -1.56em 0 0.16em;
   padding: 0;
   border-radius: 0;
@@ -740,7 +854,7 @@ watch(markdownInput, (val) => {
   text-decoration-color: rgba(31, 41, 55, 0.28);
 }
 
-.markdown-preview code {
+.markdown-preview :not(pre) > code {
   background: var(--rv-soft);
   border: 1px solid #d1d5db;
   border-radius: 3px;
@@ -748,22 +862,6 @@ watch(markdownInput, (val) => {
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-size: 0.86em;
   color: #1f2937;
-}
-
-.markdown-preview pre {
-  background: #111827;
-  color: #e2e8f0;
-  border-radius: 5px;
-  padding: 10px;
-  overflow: auto;
-  margin: 0.5em 0;
-}
-
-.markdown-preview pre code {
-  background: transparent;
-  border: none;
-  color: inherit;
-  padding: 0;
 }
 
 .markdown-preview hr {
@@ -946,7 +1044,6 @@ watch(markdownInput, (val) => {
 
   .markdown-preview h3 + p > strong:only-child {
     float: right !important;
-    display: inline-block !important;
     margin: -1.56em 0 0.16em !important;
     font-size: 0.8rem !important;
   }
@@ -961,15 +1058,6 @@ watch(markdownInput, (val) => {
   .markdown-preview h3 + p + ul,
   .markdown-preview h3 + p + p + ul {
     clear: both !important;
-  }
-
-  .markdown-preview code {
-    background: var(--rv-soft) !important;
-  }
-
-  .markdown-preview pre {
-    background: #111827 !important;
-    color: #e5e7eb !important;
   }
 
   * {

@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import type * as MonacoType from 'monaco-editor'
-import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
-import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
-import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 
 const props = defineProps<{
@@ -28,19 +25,7 @@ declare global {
   }
 }
 
-if (typeof window !== 'undefined') {
-  window.MonacoEnvironment = {
-    getWorker(_: any, label: string) {
-      if (label === 'json') {
-        return new JsonWorker()
-      }
-      if (label === 'typescript' || label === 'javascript') {
-        return new TsWorker()
-      }
-      return new EditorWorker()
-    },
-  }
-}
+// MonacoEnvironment layout will be set in onMounted
 
 const editorContainer = ref<HTMLElement | null>(null)
 let editor: MonacoType.editor.IStandaloneCodeEditor | null = null
@@ -65,6 +50,23 @@ function updateExtraLib() {
 onMounted(async () => {
   if (typeof window === 'undefined')
     return
+
+  // Set up workers for Monaco if not already set
+  if (!window.MonacoEnvironment) {
+    const EditorWorker = (await import('monaco-editor/esm/vs/editor/editor.worker?worker')).default
+    const JsonWorker = (await import('monaco-editor/esm/vs/language/json/json.worker?worker')).default
+    const TsWorker = (await import('monaco-editor/esm/vs/language/typescript/ts.worker?worker')).default
+
+    window.MonacoEnvironment = {
+      getWorker(_, label) {
+        if (label === 'json')
+          return new JsonWorker()
+        if (label === 'typescript' || label === 'javascript')
+          return new TsWorker()
+        return new EditorWorker()
+      },
+    }
+  }
 
   // @ts-expect-error - editor.api doesn't have a specific type declaration
   const monaco = (await import('monaco-editor/esm/vs/editor/editor.api')) as typeof MonacoType

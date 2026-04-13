@@ -34,7 +34,6 @@ pandora/
 │   ├── pdfjs/               # PDF.js cmaps and fonts
 │   └── svgedit/             # SVG editor dependencies
 ├── plugins/                 # Vite plugins (icon server)
-└── cypress/                 # E2E tests
 ```
 
 **Technology Stack:**
@@ -109,9 +108,6 @@ pnpm lint
 
 # Unit tests
 pnpm test:unit
-
-# E2E tests
-pnpm test:e2e
 ```
 
 **Environment Requirements:**
@@ -122,13 +118,11 @@ pnpm test:e2e
 ## Testing Strategy
 
 - **Unit Tests**: Vitest with jsdom environment
-- **E2E Tests**: Cypress (configured but minimal coverage)
 - **Type Checking**: vue-tsc as part of build pipeline
 
 **Test Locations:**
 
 - Unit: No dedicated test files yet (Vitest configured)
-- E2E: `cypress/e2e/` - basic example test exists
 
 ## Coding Standards
 

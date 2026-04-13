@@ -2,11 +2,8 @@
 </script>
 
 <script setup lang="ts">
-import ExcelJS from 'exceljs'
 import { UploadCloud } from 'lucide-vue-next'
-import Papa from 'papaparse'
 import { ref } from 'vue'
-import * as XLSX from 'xlsx'
 import { generateTypeScript } from '@/utils/type-generator'
 
 export interface ParsedData {
@@ -29,6 +26,11 @@ const isDragging = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 async function parseExcelFile(file: File): Promise<{ data: any[] | Record<string, any[]>, isMultiSheet: boolean, sheetNames: string[] }> {
+  const [XLSX, ExcelJS] = await Promise.all([
+    import('xlsx'),
+    import('exceljs'),
+  ])
+
   const arrayBuffer = await file.arrayBuffer()
 
   // First, use SheetJS (XLSX) for robust parsing of data and structures
@@ -58,7 +60,7 @@ async function parseExcelFile(file: File): Promise<{ data: any[] | Record<string
 
   // Then try ExcelJS for image extraction in a non-failing try-catch block
   try {
-    const excelJsWorkbook = new ExcelJS.Workbook()
+    const excelJsWorkbook = new ExcelJS.default.Workbook()
     await excelJsWorkbook.xlsx.load(arrayBuffer)
     const images = excelJsWorkbook.model.media || []
 
@@ -133,6 +135,8 @@ async function parseExcelFile(file: File): Promise<{ data: any[] | Record<string
 }
 
 async function parseCSVFile(file: File): Promise<any[]> {
+  const Papa = (await import('papaparse')).default
+
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
