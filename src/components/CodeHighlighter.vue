@@ -121,7 +121,6 @@ const highlightedCode = computed(() => {
   transform: translateX(-50%);
   color: #c5c8c6;
   font-size: 12px;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
   opacity: 0.6;
 }
 
@@ -135,7 +134,6 @@ pre {
   line-height: 1.6;
   border-radius: 0 !important;
   text-shadow: none !important;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
 }
 
 code {

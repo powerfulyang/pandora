@@ -733,7 +733,9 @@ watch(markdownInput, (val) => {
   background: #fff;
   min-height: 980px;
   padding: 24px 30px 28px;
-  font-family: Kaiti;
+  font-family:
+    Fira Code,
+    Kaiti;
   line-height: 1.52;
   font-size: 12px;
   letter-spacing: 0.005em;
@@ -813,7 +815,7 @@ watch(markdownInput, (val) => {
 }
 
 .markdown-preview h3 + p > strong:only-child {
-  margin: -1.56em 0 0.16em;
+  margin: -2em 0 0.16em;
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -834,7 +836,6 @@ watch(markdownInput, (val) => {
 .markdown-preview h3 + p + p {
   margin-top: -0.14em;
   margin-bottom: 0.14em;
-  text-align: right;
   color: #374151;
   font-size: 0.86rem;
 }
@@ -859,7 +860,6 @@ watch(markdownInput, (val) => {
   border: 1px solid #d1d5db;
   border-radius: 3px;
   padding: 0 4px;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-size: 0.86em;
   color: #1f2937;
 }
@@ -1044,12 +1044,11 @@ watch(markdownInput, (val) => {
 
   .markdown-preview h3 + p > strong:only-child {
     float: right !important;
-    margin: -1.56em 0 0.16em !important;
+    margin: -2em 0 0.16em !important;
     font-size: 0.8rem !important;
   }
 
   .markdown-preview h3 + p + p {
-    text-align: right !important;
     margin-top: -0.14em !important;
     margin-bottom: 0.14em !important;
     font-size: 0.86rem !important;

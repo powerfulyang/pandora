@@ -1,8 +1,4 @@
 /* ──────────────────────────────────────────────────────────────
-   Google Fonts: Outfit (display), JetBrains Mono (default/mono)
-   ────────────────────────────────────────────────────────────── */
-
-/* ──────────────────────────────────────────────────────────────
    Light Theme (Clinical Variant)
    ────────────────────────────────────────────────────────────── */
 .light,
@@ -118,7 +114,7 @@ body {
   margin: 0;
   background-color: var(--pd-bg);
   color: var(--pd-text);
-  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+  font-family: 'Fira Code', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
@@ -196,7 +192,6 @@ body {
    JSON Viewer Theme Overrides (vue-json-pretty)
    ────────────────────────────────────────────────────────────── */
 .vjs-tree {
-  font-family: 'JetBrains Mono', ui-monospace, monospace !important;
   font-size: 13px !important;
   line-height: 1.7 !important;
 }

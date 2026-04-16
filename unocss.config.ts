@@ -49,9 +49,6 @@ export default defineConfig(
         'pd-selection': 'var(--pd-selection)',
         'pd-shadow': 'var(--pd-shadow)',
       },
-      fontFamily: {
-        sans: '\'JetBrains Mono\', ui-monospace, \'Cascadia Code\', \'Fira Code\', monospace',
-      },
     },
     shortcuts: [
       ['btn', 'px-4 py-2 rounded-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'],
