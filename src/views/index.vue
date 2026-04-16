@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, GitBranch, Pencil, PenTool, Zap } from 'lucide-vue-next'
+import { Archive, ArrowRight, Binary, Braces, Code2, Crop, FileImage, FileKey, Film, GitBranch, Pencil, PenTool, Zap } from 'lucide-vue-next'
 import { motion } from 'motion-v'
 import ClientClock from '@/components/ClientClock.vue'
 import ClientDate from '@/components/ClientDate.vue'
@@ -32,6 +32,15 @@ const tools = [
     href: '/image-converter',
     status: 'ONLINE',
     stats: ['Batch Mode', 'History Log'],
+  },
+  {
+    id: 'video-to-gif',
+    title: 'Video to GIF',
+    icon: Film,
+    desc: 'Trim a short clip and convert browser-playable video into animated GIFs locally.',
+    href: '/video-to-gif',
+    status: 'ONLINE',
+    stats: ['Clip + FPS', 'Worker Encode'],
   },
   {
     id: 'data-parser',

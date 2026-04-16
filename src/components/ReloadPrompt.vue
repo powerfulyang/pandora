@@ -1,22 +1,32 @@
 <script setup lang="ts">
 import { useRegisterSW } from 'virtual:pwa-register/vue'
+import { computed } from 'vue'
 
-const {
-  offlineReady,
-  needRefresh,
-  updateServiceWorker,
-} = useRegisterSW({
-  onRegistered(r) {
-    console.log('SW Registered:', r)
-  },
-  onRegisterError(error) {
-    console.log('SW registration error', error)
-  },
-})
+const sw = import.meta.env.SSR
+  ? null
+  : useRegisterSW({
+      onRegistered(r) {
+        console.log('SW Registered:', r)
+      },
+      onRegisterError(error) {
+        console.log('SW registration error', error)
+      },
+    })
+
+const offlineReady = computed(() => sw?.offlineReady.value ?? false)
+const needRefresh = computed(() => sw?.needRefresh.value ?? false)
+
+async function updateServiceWorker() {
+  if (!sw)
+    return
+  await sw.updateServiceWorker()
+}
 
 function close() {
-  offlineReady.value = false
-  needRefresh.value = false
+  if (!sw)
+    return
+  sw.offlineReady.value = false
+  sw.needRefresh.value = false
 }
 </script>
 

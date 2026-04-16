@@ -18,6 +18,11 @@ export interface ProcessingRecord {
   scale?: number
   savedFile?: Blob // For PDF "Merge Long", this is the merged image. For multi-page, we might just store the zip? Or the first page?
   pagesCount?: number
+  duration?: number
+  fps?: number
+  framesCount?: number
+  width?: number
+  height?: number
 }
 
 export const recordStorage = {
@@ -68,6 +73,35 @@ export const pdfRecordStorage = {
 
   async deleteRecord(id: string) {
     await pdfRecordStore.removeItem(id)
+  },
+}
+
+// --- Video GIF Storage ---
+const videoGifRecordStore = localforage.createInstance({
+  name: 'PandoraApp',
+  storeName: 'video_gif_records',
+  description: 'Stores video to GIF conversion records',
+})
+
+export const videoGifRecordStorage = {
+  async saveRecord(record: ProcessingRecord) {
+    await videoGifRecordStore.setItem(record.id, record)
+  },
+
+  async getRecords(): Promise<ProcessingRecord[]> {
+    const records: ProcessingRecord[] = []
+    await videoGifRecordStore.iterate((value) => {
+      records.push(value as ProcessingRecord)
+    })
+    return records.sort((a, b) => b.timestamp - a.timestamp)
+  },
+
+  async clearRecords() {
+    await videoGifRecordStore.clear()
+  },
+
+  async deleteRecord(id: string) {
+    await videoGifRecordStore.removeItem(id)
   },
 }
 
